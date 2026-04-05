@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Home Energy Dashboard</title>
+  <title>NorthWestern Energy Wizard</title>
   <style>
     :root {
       --bg: #eef4f7;
@@ -30,7 +30,7 @@
       min-height: 100vh;
     }
     .page { width: min(1680px, calc(100vw - 24px)); margin: 0 auto; padding: 22px 0 40px; }
-    .hero { display: grid; grid-template-columns: 1.5fr 1fr; gap: 18px; margin-bottom: 20px; }
+    .hero { display: grid; grid-template-columns: 1.5fr 1fr; gap: 18px; margin-bottom: 20px; align-items: stretch; }
     .hero-card, .panel {
       background: var(--panel);
       border: 1px solid var(--line);
@@ -48,13 +48,81 @@
       border-radius: 50%;
       background: radial-gradient(circle, rgba(195, 34, 51, 0.18), transparent 68%);
     }
+    .hero-banner {
+      min-height: 352px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.94), rgba(239,245,251,0.96)),
+        repeating-linear-gradient(
+          0deg,
+          rgba(0, 75, 135, 0.035) 0,
+          rgba(0, 75, 135, 0.035) 1px,
+          transparent 1px,
+          transparent 28px
+        );
+      border: 1px solid rgba(0, 75, 135, 0.16);
+    }
+    .hero-banner::before {
+      content: "";
+      position: absolute;
+      inset: 16px;
+      border: 1px dashed rgba(0, 75, 135, 0.16);
+      border-radius: 18px;
+      pointer-events: none;
+    }
+    .hero-banner-inner {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1.25fr 0.9fr;
+      gap: 20px;
+      align-items: center;
+    }
     h1, h2, h3 {
       margin: 0;
       font-family: "Trebuchet MS", "Aptos", "Segoe UI", sans-serif;
       letter-spacing: -0.02em;
     }
-    h1 { font-size: clamp(2rem, 4vw, 3.6rem); line-height: 0.95; max-width: 10ch; margin-bottom: 14px; }
-    .lede { color: var(--muted); max-width: 60ch; font-size: 1rem; line-height: 1.55; }
+    h1 { font-size: clamp(2.4rem, 4.8vw, 4.8rem); line-height: 0.9; max-width: 13ch; margin-bottom: 14px; }
+    .lede { color: var(--muted); max-width: 60ch; font-size: 1.04rem; line-height: 1.6; }
+    .ascii-shell {
+      position: relative;
+      z-index: 1;
+      padding: 18px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(0, 59, 92, 0.96), rgba(7, 49, 76, 0.98));
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 20px 40px rgba(0, 59, 92, 0.18);
+      color: #d8ebfb;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ascii-shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top right, rgba(195, 34, 51, 0.24), transparent 30%),
+        linear-gradient(180deg, transparent, rgba(255,255,255,0.02));
+      pointer-events: none;
+    }
+    .ascii-art {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      color: #f3f8fc;
+      font-family: "Courier New", Consolas, monospace;
+      font-size: clamp(0.72rem, 0.95vw, 0.88rem);
+      line-height: 1.02;
+      letter-spacing: 0;
+      white-space: pre;
+      text-shadow: 0 0 12px rgba(109, 169, 210, 0.18);
+      display: inline-block;
+      width: max-content;
+      max-width: 100%;
+    }
     .upload-card { padding: 22px; display: flex; flex-direction: column; gap: 14px; }
     .drop-zone {
       border: 2px dashed rgba(31, 42, 44, 0.18);
@@ -250,24 +318,56 @@
     @media (max-width: 1120px) {
       .hero, .meta-row, .chart-grid, .secondary-grid, .three-grid { grid-template-columns: 1fr; }
       .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .hero-banner-inner { grid-template-columns: 1fr; }
     }
     @media (max-width: 720px) {
       .page { width: min(100vw - 12px, 1680px); padding-top: 12px; }
       .hero-card, .panel, .upload-card { padding: 18px; }
       .stats-grid { grid-template-columns: 1fr; }
       .drop-zone { min-height: 170px; }
+      .hero-banner { min-height: auto; }
+      h1 { max-width: none; }
+      .ascii-shell { padding: 14px; }
     }
   </style>
 </head>
 <body>
   <div class="page">
     <section class="hero">
-      <div class="hero-card">
-        <h1>Home Energy Dashboard</h1>
-        <p class="lede">
-          Drop in your latest NorthWestern Energy interval export and get an instant view of how your home uses electricity:
-          baseload, peaks, weekday vs. weekend behavior, seasonal shifts, and the hours that shape your bill.
-        </p>
+      <div class="hero-card hero-banner">
+        <div class="hero-banner-inner">
+          <div>
+            <h1>NorthWestern Energy Wizard</h1>
+            <p class="lede">
+              Drop in your latest NorthWestern Energy interval export and get an instant view of how your home uses electricity:
+              baseload, peaks, weekday vs. weekend behavior, seasonal shifts, and the hours that shape your bill.
+            </p>
+          </div>
+          <div class="ascii-shell" aria-hidden="true">
+            <pre class="ascii-art">                    ____ 
+                  .'* *.'
+               __/_*_*(_
+              / _______ \
+             _\_)/___\(_/_ 
+            / _((\- -/))_ \
+            \ \())(-)(()/ /
+             ' \(((()))/ '
+            / ' \)).))/ ' \
+           / _ \ - | - /_  \
+          (   ( .;''';. .'  )
+          _\"__ /    )\ __"/_
+            \/  \   ' /  \/
+             .'  '...' ' )
+              / /  |  \ \
+             / .   .   . \
+            /   .     .   \
+           /   /   |   \   \
+         .'   /    b    '.  '.
+     _.-'    /     Bb     '-. '-._ 
+ _.-'       |      BBb       '-.  '-. 
+(________mrf\____.dBBBb.________)____)</pre>
+          </div>
+        </div>
       </div>
       <div class="hero-card upload-card">
         <div id="dropZone" class="drop-zone" tabindex="0" role="button" aria-label="Upload energy CSV">
