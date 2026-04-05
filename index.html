@@ -6,37 +6,56 @@
   <title>NorthWestern Energy Wizard</title>
   <style>
     :root {
-      --bg: #eef4f7;
-      --panel: rgba(255, 255, 255, 0.92);
-      --ink: #003b5c;
-      --muted: #4f6777;
-      --line: rgba(0, 76, 125, 0.14);
-      --accent: #c32233;
-      --accent-2: #004b87;
-      --accent-3: #6da9d2;
-      --accent-4: #dfe9f3;
-      --shadow: 0 18px 48px rgba(0, 59, 92, 0.12);
-      --radius: 22px;
+      --bg: #061109;
+      --panel: rgba(9, 24, 12, 0.88);
+      --ink: #9bff9f;
+      --muted: #5bbd67;
+      --line: rgba(113, 255, 133, 0.18);
+      --accent: #c8ff8f;
+      --accent-2: #4cff74;
+      --accent-3: #2cae46;
+      --accent-4: #132719;
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+      --radius: 18px;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: "Trebuchet MS", "Aptos", "Segoe UI", sans-serif;
+      font-family: "Lucida Console", "Courier New", Consolas, monospace;
       color: var(--ink);
       background:
-        radial-gradient(circle at top left, rgba(195, 34, 51, 0.12), transparent 30%),
-        radial-gradient(circle at top right, rgba(0, 75, 135, 0.16), transparent 24%),
-        linear-gradient(180deg, #f7fbfd 0%, #edf5f8 45%, #e6f0f4 100%);
+        radial-gradient(circle at top center, rgba(76, 255, 116, 0.12), transparent 24%),
+        radial-gradient(circle at 50% 120%, rgba(76, 255, 116, 0.08), transparent 34%),
+        linear-gradient(180deg, #08150a 0%, #040b05 100%);
       min-height: 100vh;
+      position: relative;
     }
-    .page { width: min(1680px, calc(100vw - 24px)); margin: 0 auto; padding: 22px 0 40px; }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(180deg, rgba(255,255,255,0.035) 0, rgba(255,255,255,0.035) 1px, transparent 1px, transparent 4px);
+      opacity: 0.24;
+      pointer-events: none;
+      z-index: 0;
+      mix-blend-mode: screen;
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at center, transparent 58%, rgba(0,0,0,0.36) 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .page { width: min(1680px, calc(100vw - 24px)); margin: 0 auto; padding: 22px 0 40px; position: relative; z-index: 1; }
     .hero { display: grid; grid-template-columns: 1.5fr 1fr; gap: 18px; margin-bottom: 20px; align-items: stretch; }
     .hero-card, .panel {
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(6px);
     }
     .hero-card { padding: 28px; position: relative; overflow: hidden; }
     .hero-card::after {
@@ -46,26 +65,26 @@
       width: 180px;
       height: 180px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(195, 34, 51, 0.18), transparent 68%);
+      background: radial-gradient(circle, rgba(76, 255, 116, 0.16), transparent 68%);
     }
     .hero-banner {
       min-height: 352px;
       background:
-        linear-gradient(135deg, rgba(255,255,255,0.94), rgba(239,245,251,0.96)),
+        linear-gradient(135deg, rgba(12,28,15,0.96), rgba(7,18,9,0.98)),
         repeating-linear-gradient(
           0deg,
-          rgba(0, 75, 135, 0.035) 0,
-          rgba(0, 75, 135, 0.035) 1px,
+          rgba(76, 255, 116, 0.045) 0,
+          rgba(76, 255, 116, 0.045) 1px,
           transparent 1px,
           transparent 28px
         );
-      border: 1px solid rgba(0, 75, 135, 0.16);
+      border: 1px solid rgba(76, 255, 116, 0.18);
     }
     .hero-banner::before {
       content: "";
       position: absolute;
       inset: 16px;
-      border: 1px dashed rgba(0, 75, 135, 0.16);
+      border: 1px dashed rgba(113, 255, 133, 0.15);
       border-radius: 18px;
       pointer-events: none;
     }
@@ -80,20 +99,21 @@
     }
     h1, h2, h3 {
       margin: 0;
-      font-family: "Trebuchet MS", "Aptos", "Segoe UI", sans-serif;
-      letter-spacing: -0.02em;
+      font-family: "Lucida Console", "Courier New", Consolas, monospace;
+      letter-spacing: 0.02em;
     }
-    .lede { color: var(--muted); max-width: 60ch; font-size: 1.04rem; line-height: 1.6; }
+    .lede { color: #88df90; max-width: 60ch; font-size: 1rem; line-height: 1.72; }
     .hero-wordmark {
       margin: 0 0 16px;
       color: var(--accent-2);
       font-family: "Courier New", Consolas, monospace;
       font-size: clamp(0.48rem, 0.68vw, 0.74rem);
-      line-height: 1.06;
+      line-height: 1.04;
       letter-spacing: 0;
       white-space: pre;
       display: inline-block;
       max-width: 100%;
+      text-shadow: 0 0 14px rgba(76, 255, 116, 0.28);
     }
     .ascii-shell {
       position: relative;
@@ -102,10 +122,12 @@
       width: min(100%, 370px);
       justify-self: end;
       border-radius: 18px;
-      background: linear-gradient(180deg, rgba(0, 59, 92, 0.96), rgba(7, 49, 76, 0.98));
-      border: 1px solid rgba(255,255,255,0.08);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 20px 40px rgba(0, 59, 92, 0.18);
-      color: #d8ebfb;
+      background:
+        linear-gradient(180deg, rgba(8, 28, 11, 0.98), rgba(5, 18, 7, 1)),
+        repeating-linear-gradient(180deg, rgba(76, 255, 116, 0.03) 0, rgba(76, 255, 116, 0.03) 1px, transparent 1px, transparent 5px);
+      border: 1px solid rgba(76,255,116,0.18);
+      box-shadow: inset 0 0 0 1px rgba(200,255,143,0.05), 0 0 36px rgba(76, 255, 116, 0.12);
+      color: #d7ffd6;
       overflow: hidden;
       display: flex;
       align-items: center;
@@ -116,21 +138,21 @@
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(circle at top right, rgba(195, 34, 51, 0.24), transparent 30%),
-        linear-gradient(180deg, transparent, rgba(255,255,255,0.02));
+        radial-gradient(circle at top center, rgba(200, 255, 143, 0.08), transparent 28%),
+        linear-gradient(180deg, transparent, rgba(76,255,116,0.02));
       pointer-events: none;
     }
     .ascii-art {
       position: relative;
       z-index: 1;
       margin: 0;
-      color: #f3f8fc;
+      color: #dcffd7;
       font-family: "Courier New", Consolas, monospace;
       font-size: clamp(0.72rem, 0.95vw, 0.88rem);
       line-height: 1.02;
       letter-spacing: 0;
       white-space: pre;
-      text-shadow: 0 0 12px rgba(109, 169, 210, 0.18);
+      text-shadow: 0 0 10px rgba(76, 255, 116, 0.22);
       display: inline-block;
       width: max-content;
       max-width: 100%;
@@ -138,11 +160,11 @@
     }
     .upload-card { padding: 22px; display: flex; flex-direction: column; gap: 14px; }
     .drop-zone {
-      border: 2px dashed rgba(31, 42, 44, 0.18);
+      border: 2px dashed rgba(113, 255, 133, 0.18);
       border-radius: 18px;
       background:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(240, 245, 250, 0.94)),
-        repeating-linear-gradient(-45deg, rgba(0, 75, 135, 0.04) 0, rgba(0, 75, 135, 0.04) 12px, transparent 12px, transparent 24px);
+        linear-gradient(135deg, rgba(10, 24, 12, 0.9), rgba(7, 18, 8, 0.96)),
+        repeating-linear-gradient(-45deg, rgba(76, 255, 116, 0.03) 0, rgba(76, 255, 116, 0.03) 12px, transparent 12px, transparent 24px);
       padding: 24px;
       min-height: 220px;
       display: flex;
@@ -154,10 +176,10 @@
     }
     .drop-zone.dragover {
       transform: translateY(-3px);
-      border-color: var(--accent);
+      border-color: var(--accent-2);
       background:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(235, 243, 248, 0.98)),
-        repeating-linear-gradient(-45deg, rgba(195, 34, 51, 0.05) 0, rgba(195, 34, 51, 0.05) 12px, transparent 12px, transparent 24px);
+        linear-gradient(135deg, rgba(14, 32, 15, 0.94), rgba(9, 22, 10, 0.98)),
+        repeating-linear-gradient(-45deg, rgba(200, 255, 143, 0.06) 0, rgba(200, 255, 143, 0.06) 12px, transparent 12px, transparent 24px);
     }
     .drop-zone strong { display: block; font-size: 1.1rem; margin-bottom: 8px; }
     .drop-zone p, .fine-print, .meta-text, .stat-label, .insights li, .empty-state, .table-note, .chart-subtitle { color: var(--muted); }
@@ -168,8 +190,8 @@
       border: none;
       border-radius: 999px;
       padding: 11px 16px;
-      background: var(--ink);
-      color: #fff;
+      background: linear-gradient(180deg, #17341c, #0f2414);
+      color: var(--accent);
       cursor: pointer;
       font: inherit;
       transition: transform 160ms ease, background 160ms ease;
@@ -180,7 +202,7 @@
       gap: 8px;
     }
     button:hover, .file-button:hover { transform: translateY(-1px); }
-    .button-secondary { background: #e8dfd0; color: var(--ink); }
+    .button-secondary { background: #101f11; color: var(--accent-2); border: 1px solid rgba(76,255,116,0.16); }
     input[type="file"] { display: none; }
     .dashboard { display: none; gap: 18px; }
     .dashboard.ready { display: grid; }
@@ -191,7 +213,7 @@
     .secondary-grid { grid-template-columns: 1fr 1fr; }
     .three-grid { grid-template-columns: 1fr 1fr 1fr; }
     .panel { padding: 20px; overflow: hidden; }
-    .panel h2 { color: var(--accent-2); }
+    .panel h2 { color: var(--accent); }
     .meta-block { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: end; }
     .meta-item .value { font-size: 1.1rem; font-weight: 700; }
     .meta-item .label {
@@ -204,8 +226,8 @@
     .stat-card {
       padding: 18px;
       border-radius: 18px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(238,243,248,0.98));
-      border: 1px solid rgba(42, 61, 66, 0.08);
+      background: linear-gradient(180deg, rgba(13,31,15,0.96), rgba(7,19,9,0.98));
+      border: 1px solid rgba(76,255,116,0.12);
       min-height: 120px;
       display: flex;
       flex-direction: column;
@@ -222,8 +244,8 @@
     .heatmap-wrap {
       overflow-x: auto;
       border-radius: 14px;
-      border: 1px solid rgba(42, 61, 66, 0.08);
-      background: rgba(245, 249, 252, 0.95);
+      border: 1px solid rgba(76, 255, 116, 0.08);
+      background: rgba(7, 18, 8, 0.95);
     }
     .insights { margin: 10px 0 0; padding-left: 18px; line-height: 1.55; }
     .insights li + li { margin-top: 6px; }
@@ -232,7 +254,7 @@
       width: 160px;
       height: 12px;
       border-radius: 999px;
-      background: linear-gradient(90deg, #eef4f8, #6da9d2, #004b87, #c32233);
+      background: linear-gradient(90deg, #0f1f11, #2cae46, #4cff74, #c8ff8f);
       border: 1px solid rgba(31, 42, 44, 0.1);
     }
     .chart-controls {
@@ -241,8 +263,8 @@
       gap: 10px;
       padding: 8px 12px;
       border-radius: 999px;
-      background: rgba(0, 75, 135, 0.07);
-      border: 1px solid rgba(0, 75, 135, 0.12);
+      background: rgba(12, 30, 14, 0.92);
+      border: 1px solid rgba(76, 255, 116, 0.12);
       color: var(--muted);
       font-size: 0.9rem;
     }
@@ -277,10 +299,10 @@
     }
     .series-toggle {
       appearance: none;
-      border: 1px solid rgba(0, 75, 135, 0.14);
+      border: 1px solid rgba(76, 255, 116, 0.14);
       border-radius: 999px;
       padding: 8px 12px;
-      background: rgba(255,255,255,0.86);
+      background: rgba(11, 26, 13, 0.9);
       color: var(--ink);
       font: inherit;
       font-size: 0.92rem;
@@ -292,15 +314,15 @@
     }
     .series-toggle.active {
       background: var(--accent-2);
-      color: #fff;
+      color: #031106;
       border-color: var(--accent-2);
     }
     .filter-row select {
       appearance: none;
-      border: 1px solid rgba(0, 75, 135, 0.16);
+      border: 1px solid rgba(76, 255, 116, 0.16);
       border-radius: 999px;
       padding: 9px 12px;
-      background: #fff;
+      background: #0d1f10;
       color: var(--ink);
       font: inherit;
     }
@@ -308,32 +330,32 @@
       margin-top: 12px;
       padding: 12px 14px;
       border-radius: 14px;
-      background: linear-gradient(180deg, rgba(0,75,135,0.05), rgba(195,34,51,0.04));
-      border: 1px solid rgba(0, 75, 135, 0.1);
+      background: linear-gradient(180deg, rgba(16,40,18,0.92), rgba(9,24,11,0.96));
+      border: 1px solid rgba(76, 255, 116, 0.1);
       color: var(--muted);
       font-size: 0.92rem;
       line-height: 1.5;
     }
-    .table-wrap { overflow-x: auto; border: 1px solid rgba(42, 61, 66, 0.08); border-radius: 14px; background: rgba(255, 255, 255, 0.5); }
+    .table-wrap { overflow-x: auto; border: 1px solid rgba(76, 255, 116, 0.08); border-radius: 14px; background: rgba(8, 20, 9, 0.72); }
     table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
-    th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid rgba(42, 61, 66, 0.08); white-space: nowrap; }
+    th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid rgba(76, 255, 116, 0.08); white-space: nowrap; }
     th {
       color: var(--muted);
       font-weight: 600;
       font-size: 0.84rem;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      background: rgba(255, 251, 245, 0.9);
+      background: rgba(13, 28, 14, 0.92);
     }
-    tbody tr:nth-child(even) { background: rgba(255,255,255,0.32); }
+    tbody tr:nth-child(even) { background: rgba(12, 26, 13, 0.6); }
     .tooltip {
       position: fixed;
       pointer-events: none;
       z-index: 20;
       padding: 10px 12px;
       border-radius: 12px;
-      background: rgba(20, 26, 28, 0.94);
-      color: #fff;
+      background: rgba(7, 18, 8, 0.96);
+      color: var(--accent);
       font-size: 0.9rem;
       line-height: 1.45;
       box-shadow: 0 14px 30px rgba(0,0,0,0.18);
@@ -344,12 +366,12 @@
     }
     .tooltip.visible { opacity: 1; }
     .empty-state, .error-box { margin-top: 10px; padding: 14px 16px; border-radius: 14px; font-size: 0.95rem; }
-    .empty-state { background: rgba(255,255,255,0.42); border: 1px solid rgba(42, 61, 66, 0.08); }
-    .error-box { display: none; color: #7f291e; background: rgba(200, 77, 55, 0.08); border: 1px solid rgba(200, 77, 55, 0.25); }
+    .empty-state { background: rgba(10, 24, 11, 0.72); border: 1px solid rgba(76, 255, 116, 0.08); }
+    .error-box { display: none; color: #d7ffb0; background: rgba(110, 255, 120, 0.08); border: 1px solid rgba(110, 255, 120, 0.2); }
     .source-note {
       margin-top: 18px;
       padding-top: 14px;
-      border-top: 1px solid rgba(42, 61, 66, 0.08);
+      border-top: 1px solid rgba(76, 255, 116, 0.08);
       color: var(--muted);
       font-size: 0.88rem;
       line-height: 1.55;
@@ -974,7 +996,7 @@ delivered,2025-01-01,23:00,23:59,2.359,kWh,electric,2000446621,,`;
     function colorForHeat(value, min, max) {
       if (value == null) return "rgba(110, 123, 127, 0.12)";
       const t = max === min ? 0.5 : Math.max(0, Math.min(1, (value - min) / (max - min)));
-      const stops = [[242, 247, 252], [109, 169, 210], [0, 75, 135], [195, 34, 51]];
+      const stops = [[15, 31, 17], [44, 174, 70], [76, 255, 116], [200, 255, 143]];
       const segment = Math.min(stops.length - 2, Math.floor(t * (stops.length - 1)));
       const localT = (t * (stops.length - 1)) - segment;
       const start = stops[segment];
@@ -1081,20 +1103,20 @@ delivered,2025-01-01,23:00,23:59,2.359,kWh,electric,2000446621,,`;
       const maxValue = Math.max(...allValues, options.yMax || 0) * 1.08;
       const x = (index) => margin.left + (plotWidth * index) / (options.xLabels.length - 1 || 1);
       const y = (value) => margin.top + plotHeight - (value / (maxValue || 1)) * plotHeight;
-      const xTicks = options.xLabels.map((label, index) => `<text x="${x(index)}" y="${height - 18}" text-anchor="middle" fill="#4f6777" font-size="13">${label}</text>`).join("");
+      const xTicks = options.xLabels.map((label, index) => `<text x="${x(index)}" y="${height - 18}" text-anchor="middle" fill="#5bbd67" font-size="13">${label}</text>`).join("");
       const yTicks = Array.from({ length: 5 }, (_, i) => {
         const value = (maxValue / 4) * i;
         const yPos = y(value);
-        return `<line x1="${margin.left}" y1="${yPos}" x2="${width - margin.right}" y2="${yPos}" stroke="rgba(0,76,125,0.08)" /><text x="${margin.left - 10}" y="${yPos + 4}" text-anchor="end" fill="#4f6777" font-size="13">${formatNumber(value, 1)}</text>`;
+        return `<line x1="${margin.left}" y1="${yPos}" x2="${width - margin.right}" y2="${yPos}" stroke="rgba(113,255,133,0.08)" /><text x="${margin.left - 10}" y="${yPos + 4}" text-anchor="end" fill="#5bbd67" font-size="13">${formatNumber(value, 1)}</text>`;
       }).join("");
       const paths = series.map((item) => {
         const d = item.values.map((value, index) => `${index === 0 ? "M" : "L"} ${x(index)} ${y(value)}`).join(" ");
         const points = item.values.map((value, index) => `<circle cx="${x(index)}" cy="${y(value)}" r="4" fill="${item.color}" data-tip="${item.name}|${options.xLabels[index] || index}|${formatNumber(value, 2)} ${options.unit}" />`).join("");
         return `<path d="${d}" fill="none" stroke="${item.color}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" />${points}`;
       }).join("");
-      const legend = series.map((item, index) => `<g transform="translate(${margin.left + index * 180}, 16)"><circle cx="0" cy="0" r="6" fill="${item.color}"></circle><text x="14" y="5" fill="#4f6777" font-size="13">${item.name}</text></g>`).join("");
+      const legend = series.map((item, index) => `<g transform="translate(${margin.left + index * 180}, 16)"><circle cx="0" cy="0" r="6" fill="${item.color}"></circle><text x="14" y="5" fill="#5bbd67" font-size="13">${item.name}</text></g>`).join("");
       svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
-      svg.innerHTML = `<rect x="0" y="0" width="${width}" height="${height}" fill="transparent"></rect>${yTicks}<line x1="${margin.left}" y1="${height - margin.bottom}" x2="${width - margin.right}" y2="${height - margin.bottom}" stroke="rgba(0,76,125,0.18)" />${xTicks}${paths}${legend}`;
+      svg.innerHTML = `<rect x="0" y="0" width="${width}" height="${height}" fill="transparent"></rect>${yTicks}<line x1="${margin.left}" y1="${height - margin.bottom}" x2="${width - margin.right}" y2="${height - margin.bottom}" stroke="rgba(113,255,133,0.18)" />${xTicks}${paths}${legend}`;
       attachSvgTooltips(svg);
     }
 
@@ -1111,15 +1133,15 @@ delivered,2025-01-01,23:00,23:59,2.359,kWh,electric,2000446621,,`;
       const yTicks = Array.from({ length: 5 }, (_, i) => {
         const value = (maxValue / 4) * i;
         const yPos = y(value);
-        return `<line x1="${margin.left}" y1="${yPos}" x2="${width - margin.right}" y2="${yPos}" stroke="rgba(0,76,125,0.08)" /><text x="${margin.left - 10}" y="${yPos + 4}" text-anchor="end" fill="#4f6777" font-size="13">${formatNumber(value, 1)}</text>`;
+        return `<line x1="${margin.left}" y1="${yPos}" x2="${width - margin.right}" y2="${yPos}" stroke="rgba(113,255,133,0.08)" /><text x="${margin.left - 10}" y="${yPos + 4}" text-anchor="end" fill="#5bbd67" font-size="13">${formatNumber(value, 1)}</text>`;
       }).join("");
       const bars = values.map((value, index) => {
         const x = margin.left + index * gap + (gap - barWidth) / 2;
         const barHeight = plotHeight - (y(value) - margin.top);
-        return `<rect x="${x}" y="${y(value)}" width="${barWidth}" height="${barHeight}" rx="10" fill="${options.color(index, value)}" data-tip="${categories[index]}|${formatNumber(value, 2)} ${options.unit}"></rect><text x="${x + barWidth / 2}" y="${height - 20}" text-anchor="middle" fill="#4f6777" font-size="13">${categories[index]}</text>`;
+        return `<rect x="${x}" y="${y(value)}" width="${barWidth}" height="${barHeight}" rx="10" fill="${options.color(index, value)}" data-tip="${categories[index]}|${formatNumber(value, 2)} ${options.unit}"></rect><text x="${x + barWidth / 2}" y="${height - 20}" text-anchor="middle" fill="#5bbd67" font-size="13">${categories[index]}</text>`;
       }).join("");
       svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
-      svg.innerHTML = `${yTicks}<line x1="${margin.left}" y1="${height - margin.bottom}" x2="${width - margin.right}" y2="${height - margin.bottom}" stroke="rgba(0,76,125,0.18)" />${bars}`;
+      svg.innerHTML = `${yTicks}<line x1="${margin.left}" y1="${height - margin.bottom}" x2="${width - margin.right}" y2="${height - margin.bottom}" stroke="rgba(113,255,133,0.18)" />${bars}`;
       attachSvgTooltips(svg);
     }
 
@@ -1137,7 +1159,7 @@ delivered,2025-01-01,23:00,23:59,2.359,kWh,electric,2000446621,,`;
       const yTicks = Array.from({ length: 5 }, (_, i) => {
         const value = (maxValue / 4) * i;
         const yPos = y(value);
-        return `<line x1="${margin.left}" y1="${yPos}" x2="${width - margin.right}" y2="${yPos}" stroke="rgba(0,76,125,0.08)" /><text x="${margin.left - 10}" y="${yPos + 4}" text-anchor="end" fill="#4f6777" font-size="13">${formatNumber(value, 1)}</text>`;
+        return `<line x1="${margin.left}" y1="${yPos}" x2="${width - margin.right}" y2="${yPos}" stroke="rgba(113,255,133,0.08)" /><text x="${margin.left - 10}" y="${yPos + 4}" text-anchor="end" fill="#5bbd67" font-size="13">${formatNumber(value, 1)}</text>`;
       }).join("");
       const bars = categories.map((category, index) => {
         const x = margin.left + index * gap + (gap - barWidth) / 2;
@@ -1149,11 +1171,11 @@ delivered,2025-01-01,23:00,23:59,2.359,kWh,electric,2000446621,,`;
           running += value;
           return `<rect x="${x}" y="${yTop}" width="${barWidth}" height="${Math.max(0, yBottom - yTop)}" fill="${item.color}" data-tip="${category}|${item.name}: ${formatNumber(value, 1)} ${options.unit}"></rect>`;
         }).join("");
-        return `${layers}<text x="${x + barWidth / 2}" y="${height - 20}" text-anchor="middle" fill="#4f6777" font-size="13">${category}</text>`;
+        return `${layers}<text x="${x + barWidth / 2}" y="${height - 20}" text-anchor="middle" fill="#5bbd67" font-size="13">${category}</text>`;
       }).join("");
-      const legend = series.map((item, index) => `<g transform="translate(${margin.left + index * 170}, 14)"><rect x="0" y="-7" width="14" height="14" rx="3" fill="${item.color}"></rect><text x="22" y="4" fill="#4f6777" font-size="13">${item.name}</text></g>`).join("");
+      const legend = series.map((item, index) => `<g transform="translate(${margin.left + index * 170}, 14)"><rect x="0" y="-7" width="14" height="14" rx="3" fill="${item.color}"></rect><text x="22" y="4" fill="#5bbd67" font-size="13">${item.name}</text></g>`).join("");
       svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
-      svg.innerHTML = `${yTicks}<line x1="${margin.left}" y1="${height - margin.bottom}" x2="${width - margin.right}" y2="${height - margin.bottom}" stroke="rgba(0,76,125,0.18)" />${bars}${legend}`;
+      svg.innerHTML = `${yTicks}<line x1="${margin.left}" y1="${height - margin.bottom}" x2="${width - margin.right}" y2="${height - margin.bottom}" stroke="rgba(113,255,133,0.18)" />${bars}${legend}`;
       attachSvgTooltips(svg);
     }
 
@@ -1224,10 +1246,10 @@ delivered,2025-01-01,23:00,23:59,2.359,kWh,electric,2000446621,,`;
       const peakRecords = applyRecordFilters(data.records, getFilterState("peak"));
       const loadShape = buildLoadShapeFromRecords(loadRecords);
       const loadSeries = [];
-      if (loadSeriesState.all) loadSeries.push({ name: "All days", values: loadShape.all, color: "#c32233" });
-      if (loadSeriesState.weekday) loadSeries.push({ name: "Weekdays", values: loadShape.weekday, color: "#004b87" });
-      if (loadSeriesState.weekend) loadSeries.push({ name: "Weekends", values: loadShape.weekend, color: "#6da9d2" });
-      const safeLoadSeries = loadSeries.length ? loadSeries : [{ name: "All days", values: loadShape.all, color: "#c32233" }];
+      if (loadSeriesState.all) loadSeries.push({ name: "All days", values: loadShape.all, color: "#c8ff8f" });
+      if (loadSeriesState.weekday) loadSeries.push({ name: "Weekdays", values: loadShape.weekday, color: "#4cff74" });
+      if (loadSeriesState.weekend) loadSeries.push({ name: "Weekends", values: loadShape.weekend, color: "#2cae46" });
+      const safeLoadSeries = loadSeries.length ? loadSeries : [{ name: "All days", values: loadShape.all, color: "#c8ff8f" }];
       const dowValues = buildDayOfWeekValuesFromRecords(dowRecords);
       const peakValues = buildPeakHoursFromRecords(peakRecords);
       const topPeakHour = peakValues.indexOf(Math.max(...peakValues));
@@ -1241,12 +1263,12 @@ delivered,2025-01-01,23:00,23:59,2.359,kWh,electric,2000446621,,`;
       svgBarChart(ui.dowChart, DAY_NAMES, dowValues, {
         unit: "kWh/day",
         height: 410,
-        color: (index) => index === 0 || index === 6 ? "#c32233" : "#004b87"
+        color: (index) => index === 0 || index === 6 ? "#c8ff8f" : "#4cff74"
       });
       svgBarChart(ui.peakTimingChart, Array.from({ length: 24 }, (_, hour) => formatHour12(hour).replace(":00 ", "")), peakValues, {
         unit: "peak hours",
         height: 410,
-        color: (index, value) => index === topPeakHour ? "#c32233" : value > 0 ? "#004b87" : "rgba(0,75,135,0.18)"
+        color: (index, value) => index === topPeakHour ? "#c8ff8f" : value > 0 ? "#4cff74" : "rgba(76,255,116,0.18)"
       });
     }
 
@@ -1262,11 +1284,11 @@ delivered,2025-01-01,23:00,23:59,2.359,kWh,electric,2000446621,,`;
       svgBarChart(ui.monthlyChart, monthEntries.map(([key]) => monthLabel(key)), monthEntries.map(([, value]) => value), {
         unit: "kWh",
         height: 410,
-        color: (_, value) => value === Math.max(...monthEntries.map(([, total]) => total)) ? "#c32233" : "#004b87"
+        color: (_, value) => value === Math.max(...monthEntries.map(([, total]) => total)) ? "#c8ff8f" : "#2cae46"
       });
       svgStackedBarChart(ui.monthlyBreakdownChart, data.monthlyBaseload.map((item) => monthLabel(item.key)), [
-        { name: "Always-on estimate", values: data.monthlyBaseload.map((item) => item.baseload), color: "#c32233" },
-        { name: "Active use", values: data.monthlyBaseload.map((item) => item.flexible), color: "#004b87" }
+        { name: "Always-on estimate", values: data.monthlyBaseload.map((item) => item.baseload), color: "#c8ff8f" },
+        { name: "Active use", values: data.monthlyBaseload.map((item) => item.flexible), color: "#2cae46" }
       ], {
         unit: "kWh",
         height: 410
