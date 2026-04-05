@@ -257,6 +257,48 @@
       justify-content: space-between;
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
     }
+    .opportunity-panel {
+      padding: 18px;
+    }
+    .opportunity-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .opportunity-card {
+      border: 1px solid rgba(76,255,116,0.12);
+      border-radius: 16px;
+      padding: 16px;
+      background: linear-gradient(180deg, rgba(13,31,15,0.96), rgba(7,19,9,0.98));
+      display: grid;
+      gap: 10px;
+    }
+    .opportunity-title {
+      color: var(--accent);
+      font-size: 1rem;
+      font-weight: 700;
+    }
+    .opportunity-metrics {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .opportunity-metrics span {
+      color: var(--ink);
+      font-size: 0.95rem;
+    }
+    .opportunity-confidence {
+      color: var(--accent-2);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .opportunity-note {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
     .stat-value { font-size: clamp(1.6rem, 2.4vw, 2.3rem); font-weight: 800; line-height: 1; }
     .stat-accent { color: var(--accent); }
     .stat-secondary { color: var(--accent-2); }
@@ -461,6 +503,7 @@
     @media (max-width: 1120px) {
       .hero, .meta-row, .chart-grid, .secondary-grid, .three-grid { grid-template-columns: 1fr; }
       .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .opportunity-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .hero-banner-inner { grid-template-columns: 1fr; }
     }
     @media (max-width: 720px) {
@@ -471,6 +514,7 @@
       .hero-banner { min-height: auto; }
       h1 { max-width: none; }
       .ascii-shell { padding: 14px; }
+      .opportunity-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -545,9 +589,9 @@ _  /___  _  / / /  __/  /   _  /_/ /_  /_/ /     __ |/ |/ / _  / __  /_
             <li>Log in to <a href="https://myaccount.northwesternenergy.com/NWESSP/Index.aspx?_ga=2.123556104.2072210909.1775408068-760715812.1773944080" target="_blank" rel="noreferrer">My Energy Account</a>.</li>
             <li>Select `Billing` from the menu.</li>
             <li>Click `View Detailed Usage`.</li>
-            <li>Choose whether you want to see data by day, hour, or month.</li>
+            <li>Click the 'Download my data' button in the top left.</li>
             <li>Select the time period you want to review.</li>
-            <li>Download your data using the blue button at the top left.</li>
+            <li>Download your data using the blue button at the bottom right.</li>
           </ol>
         </div>
         <p class="fine-print">This page runs entirely in your browser. Your CSV is processed locally and is never uploaded anywhere.</p>
@@ -575,6 +619,15 @@ _  /___  _  / / /  __/  /   _  /_/ /_  /_/ /     __ |/ |/ / _  / __  /_
         </div>
       </div>
       <div id="statsGrid" class="stats-grid"></div>
+      <div class="panel opportunity-panel">
+        <div class="chart-header">
+          <div>
+            <h2>Savings Opportunities</h2>
+            <div class="chart-subtitle">Estimated opportunities from your actual interval patterns, using $0.14 per kWh baseline</div>
+          </div>
+        </div>
+        <div id="opportunityGrid" class="opportunity-grid"></div>
+      </div>
       <div class="panel">
         <div class="chart-header">
           <div>
@@ -729,6 +782,7 @@ _  /___  _  / / /  __/  /   _  /_/ /_  /_/ /     __ |/ |/ / _  / __  /_
       metaBlock: document.getElementById("metaBlock"),
       insightsList: document.getElementById("insightsList"),
       statsGrid: document.getElementById("statsGrid"),
+      opportunityGrid: document.getElementById("opportunityGrid"),
       heatmapScroll: document.getElementById("heatmapScroll"),
       heatmapYAxisCanvas: document.getElementById("heatmapYAxisCanvas"),
       heatmapCanvas: document.getElementById("heatmapCanvas"),
@@ -757,6 +811,7 @@ _  /___  _  / / /  __/  /   _  /_/ /_  /_/ /     __ |/ |/ / _  / __  /_
     const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const FILTER_MONTHS = ["All months", ...MONTH_NAMES];
     const FILTER_SEASONS = ["All seasons", "Winter", "Spring", "Summer", "Fall"];
+    const ENERGY_RATE = 0.14;
     const loadSeriesState = {
       all: true,
       weekday: true,
@@ -1002,12 +1057,80 @@ _  /___  _  / / /  __/  /   _  /_/ /_  /_/ /     __ |/ |/ / _  / __  /_
           const baseload = Math.min(total, p10 * hours);
           return { key, baseload, flexible: Math.max(0, total - baseload) };
         });
+      const opportunities = buildSavingsOpportunities({
+        records,
+        baseloadEstimate: p10,
+        avgHourly,
+        weekdayAvgDaily,
+        weekendAvgDaily,
+        highUseMonth,
+        lowUseMonth,
+        peakHoursByHour,
+        topPeakHour,
+        byMonth,
+        typicalAll
+      });
       return {
         fileName, records, days, completeDays, byMonth, totalUsage, avgDaily, avgHourly, loadFactor, maxRecord, minRecord,
         baseloadEstimate: p10, peakThreshold: p90, typicalAll, typicalWeekday, typicalWeekend, dowDailyTotals,
         peakHoursByHour, missingHours, weekdayAvgDaily, weekendAvgDaily, overnightAvg, highUseMonth, lowUseMonth, topPeakHour, topTenPeaks,
-        radialByDow, monthlyBaseload, sourceStart: context.sourceStart, sourceEnd: context.sourceEnd, windowStart: context.windowStart, windowEnd: context.windowEnd
+        radialByDow, monthlyBaseload, opportunities, sourceStart: context.sourceStart, sourceEnd: context.sourceEnd, windowStart: context.windowStart, windowEnd: context.windowEnd
       };
+    }
+
+    function buildSavingsOpportunities(input) {
+      const annualFactor = 8760 / Math.max(input.records.length, 1);
+      const dollars = (kwh) => kwh * ENERGY_RATE;
+      const opportunities = [];
+
+      const baseloadReduction = Math.max(0, Math.min(input.baseloadEstimate * 0.1, 0.12));
+      const baseloadAnnual = baseloadReduction * input.records.length * annualFactor;
+      opportunities.push({
+        title: "Trim always-on load",
+        confidence: "High confidence",
+        annualKwh: baseloadAnnual,
+        annualDollars: dollars(baseloadAnnual),
+        note: `Your estimated baseload is ${formatNumber(input.baseloadEstimate, 2)} kWh/hr. Reducing that by about 10% is the clearest interval-data savings target.`
+      });
+
+      const eveningHours = [17, 18, 19, 20, 21];
+      const eveningAvg = eveningHours.reduce((sum, hour) => sum + (input.typicalAll[hour] || 0), 0) / eveningHours.length;
+      const offPeakAvg = [0, 1, 2, 3, 4].reduce((sum, hour) => sum + (input.typicalAll[hour] || 0), 0) / 5;
+      const shiftableDelta = Math.max(0, eveningAvg - offPeakAvg) * 0.12;
+      const shiftableAnnual = shiftableDelta * 365;
+      opportunities.push({
+        title: "Reduce evening peaks",
+        confidence: "Medium confidence",
+        annualKwh: shiftableAnnual,
+        annualDollars: dollars(shiftableAnnual),
+        note: `Your strongest peak cluster is around ${formatHour12(input.topPeakHour)}. A modest shift of flexible loads away from the evening window could reduce spikes and total use.`
+      });
+
+      const weekendPremium = Math.max(0, input.weekendAvgDaily - input.weekdayAvgDaily);
+      const weekendAnnual = weekendPremium * 52 * 0.2;
+      opportunities.push({
+        title: "Tighten weekend routines",
+        confidence: "Medium confidence",
+        annualKwh: weekendAnnual,
+        annualDollars: dollars(weekendAnnual),
+        note: `Weekend daily use differs from weekday use by ${formatNumber(Math.abs(input.weekendAvgDaily - input.weekdayAvgDaily), 1)} kWh/day. That often points to discretionary load patterns worth trimming.`
+      });
+
+      const seasonalSpread = Math.max(0, input.highUseMonth[1] - input.lowUseMonth[1]);
+      const seasonalAnnual = seasonalSpread * 0.18;
+      opportunities.push({
+        title: "Target seasonal HVAC load",
+        confidence: "Medium confidence",
+        annualKwh: seasonalAnnual,
+        annualDollars: dollars(seasonalAnnual),
+        note: `${monthLabel(input.highUseMonth[0])} is materially above ${monthLabel(input.lowUseMonth[0])}. Some of that spread is likely heating or cooling related and often has tune-up or schedule savings potential.`
+      });
+
+      return opportunities.map((item) => ({
+        ...item,
+        annualKwh: Math.max(0, item.annualKwh),
+        annualDollars: Math.max(0, item.annualDollars)
+      }));
     }
 
     function monthLabel(monthKey) {
@@ -1072,6 +1195,20 @@ _  /___  _  / / /  __/  /   _  /_/ /_  /_/ /     __ |/ |/ / _  / __  /_
         `If your upload contains more history, the dashboard intentionally trims to the most recent 8,760 reads ending ${data.records[data.records.length - 1].dateStr}.`
       ];
       ui.insightsList.innerHTML = insights.map((item) => `<li>${item}</li>`).join("");
+    }
+
+    function buildOpportunities(data) {
+      ui.opportunityGrid.innerHTML = data.opportunities.map((item) => `
+        <div class="opportunity-card">
+          <div class="opportunity-title">${item.title}</div>
+          <div class="opportunity-confidence">${item.confidence}</div>
+          <div class="opportunity-metrics">
+            <span>${formatNumber(item.annualKwh, 0)} kWh/yr</span>
+            <span>$${formatNumber(item.annualDollars, 0)}/yr</span>
+          </div>
+          <div class="opportunity-note">${item.note}</div>
+        </div>
+      `).join("");
     }
 
     function colorForHeat(value, min, max) {
@@ -1408,6 +1545,7 @@ _  /___  _  / / /  __/  /   _  /_/ /_  /_/ /     __ |/ |/ / _  / __  /_
       buildMeta(data);
       buildStats(data);
       buildInsights(data);
+      buildOpportunities(data);
       drawHeatmap(data);
       const monthEntries = [...data.byMonth.entries()].sort((a, b) => a[0].localeCompare(b[0]));
       svgBarChart(ui.monthlyChart, monthEntries.map(([key]) => monthLabel(key)), monthEntries.map(([, value]) => value), {
