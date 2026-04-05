@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home Energy Dashboard</title>
+  <style>
+    :root {
+      --bg: #eef4f7;
+      --panel: rgba(255, 255, 255, 0.92);
+      --ink: #003b5c;
+      --muted: #4f6777;
+      --line: rgba(0, 76, 125, 0.14);
+      --accent: #c32233;
+      --accent-2: #004b87;
+      --accent-3: #6da9d2;
+      --accent-4: #dfe9f3;
+      --shadow: 0 18px 48px rgba(0, 59, 92, 0.12);
+      --radius: 22px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Trebuchet MS", "Aptos", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(195, 34, 51, 0.12), transparent 30%),
+        radial-gradient(circle at top right, rgba(0, 75, 135, 0.16), transparent 24%),
+        linear-gradient(180deg, #f7fbfd 0%, #edf5f8 45%, #e6f0f4 100%);
+      min-height: 100vh;
+    }
+    .page { width: min(1680px, calc(100vw - 24px)); margin: 0 auto; padding: 22px 0 40px; }
+    .hero { display: grid; grid-template-columns: 1.5fr 1fr; gap: 18px; margin-bottom: 20px; }
+    .hero-card, .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .hero-card { padding: 28px; position: relative; overflow: hidden; }
+    .hero-card::after {
+      content: "";
+      position: absolute;
+      inset: auto -40px -40px auto;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(195, 34, 51, 0.18), transparent 68%);
+    }
+    h1, h2, h3 {
+      margin: 0;
+      font-family: "Trebuchet MS", "Aptos", "Segoe UI", sans-serif;
+      letter-spacing: -0.02em;
+    }
+    h1 { font-size: clamp(2rem, 4vw, 3.6rem); line-height: 0.95; max-width: 10ch; margin-bottom: 14px; }
+    .lede { color: var(--muted); max-width: 60ch; font-size: 1rem; line-height: 1.55; }
+    .upload-card { padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+    .drop-zone {
+      border: 2px dashed rgba(31, 42, 44, 0.18);
+      border-radius: 18px;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(240, 245, 250, 0.94)),
+        repeating-linear-gradient(-45deg, rgba(0, 75, 135, 0.04) 0, rgba(0, 75, 135, 0.04) 12px, transparent 12px, transparent 24px);
+      padding: 24px;
+      min-height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+      cursor: pointer;
+    }
+    .drop-zone.dragover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(235, 243, 248, 0.98)),
+        repeating-linear-gradient(-45deg, rgba(195, 34, 51, 0.05) 0, rgba(195, 34, 51, 0.05) 12px, transparent 12px, transparent 24px);
+    }
+    .drop-zone strong { display: block; font-size: 1.1rem; margin-bottom: 8px; }
+    .drop-zone p, .fine-print, .meta-text, .stat-label, .insights li, .empty-state, .table-note, .chart-subtitle { color: var(--muted); }
+    .fine-print { font-size: 0.92rem; line-height: 1.5; }
+    .button-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    button, .file-button {
+      appearance: none;
+      border: none;
+      border-radius: 999px;
+      padding: 11px 16px;
+      background: var(--ink);
+      color: #fff;
+      cursor: pointer;
+      font: inherit;
+      transition: transform 160ms ease, background 160ms ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    button:hover, .file-button:hover { transform: translateY(-1px); }
+    .button-secondary { background: #e8dfd0; color: var(--ink); }
+    input[type="file"] { display: none; }
+    .dashboard { display: none; gap: 18px; }
+    .dashboard.ready { display: grid; }
+    .meta-row, .stats-grid, .chart-grid, .secondary-grid, .three-grid { display: grid; gap: 18px; }
+    .meta-row { grid-template-columns: 1.2fr 0.8fr; }
+    .stats-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .chart-grid { grid-template-columns: 1.35fr 1fr; align-items: stretch; }
+    .secondary-grid { grid-template-columns: 1fr 1fr; }
+    .three-grid { grid-template-columns: 1fr 1fr 1fr; }
+    .panel { padding: 20px; overflow: hidden; }
+    .panel h2 { color: var(--accent-2); }
+    .meta-block { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: end; }
+    .meta-item .value { font-size: 1.1rem; font-weight: 700; }
+    .meta-item .label {
+      font-size: 0.84rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+    .stat-card {
+      padding: 18px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(238,243,248,0.98));
+      border: 1px solid rgba(42, 61, 66, 0.08);
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
+    }
+    .stat-value { font-size: clamp(1.6rem, 2.4vw, 2.3rem); font-weight: 800; line-height: 1; }
+    .stat-accent { color: var(--accent); }
+    .stat-secondary { color: var(--accent-2); }
+    .chart-header { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+    .chart-header h2 { font-size: 1.5rem; margin-bottom: 3px; }
+    .chart-frame { width: 100%; position: relative; }
+    .chart-frame svg, .chart-frame canvas { width: 100%; display: block; }
+    .heatmap-wrap {
+      overflow-x: auto;
+      border-radius: 14px;
+      border: 1px solid rgba(42, 61, 66, 0.08);
+      background: rgba(245, 249, 252, 0.95);
+    }
+    .insights { margin: 10px 0 0; padding-left: 18px; line-height: 1.55; }
+    .insights li + li { margin-top: 6px; }
+    .legend { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; color: var(--muted); font-size: 0.9rem; }
+    .legend-gradient {
+      width: 160px;
+      height: 12px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #eef4f8, #6da9d2, #004b87, #c32233);
+      border: 1px solid rgba(31, 42, 44, 0.1);
+    }
+    .chart-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(0, 75, 135, 0.07);
+      border: 1px solid rgba(0, 75, 135, 0.12);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .chart-controls input[type="range"] {
+      accent-color: var(--accent-2);
+      width: 140px;
+    }
+    .chart-controls output {
+      font-weight: 700;
+      color: var(--ink);
+      min-width: 2.8ch;
+      text-align: right;
+    }
+    .radial-wrap {
+      min-height: 460px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .filter-row select {
+      appearance: none;
+      border: 1px solid rgba(0, 75, 135, 0.16);
+      border-radius: 999px;
+      padding: 9px 12px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+    }
+    .chart-note {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(0,75,135,0.05), rgba(195,34,51,0.04));
+      border: 1px solid rgba(0, 75, 135, 0.1);
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+    .table-wrap { overflow-x: auto; border: 1px solid rgba(42, 61, 66, 0.08); border-radius: 14px; background: rgba(255, 255, 255, 0.5); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+    th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid rgba(42, 61, 66, 0.08); white-space: nowrap; }
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.84rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      background: rgba(255, 251, 245, 0.9);
+    }
+    tbody tr:nth-child(even) { background: rgba(255,255,255,0.32); }
+    .tooltip {
+      position: fixed;
+      pointer-events: none;
+      z-index: 20;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(20, 26, 28, 0.94);
+      color: #fff;
+      font-size: 0.9rem;
+      line-height: 1.45;
+      box-shadow: 0 14px 30px rgba(0,0,0,0.18);
+      opacity: 0;
+      transform: translate(-50%, -110%);
+      transition: opacity 120ms ease;
+      max-width: 240px;
+    }
+    .tooltip.visible { opacity: 1; }
+    .empty-state, .error-box { margin-top: 10px; padding: 14px 16px; border-radius: 14px; font-size: 0.95rem; }
+    .empty-state { background: rgba(255,255,255,0.42); border: 1px solid rgba(42, 61, 66, 0.08); }
+    .error-box { display: none; color: #7f291e; background: rgba(200, 77, 55, 0.08); border: 1px solid rgba(200, 77, 55, 0.25); }
+    .source-note {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(42, 61, 66, 0.08);
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.55;
+    }
+    .source-note a { color: var(--accent); }
+    @media (max-width: 1120px) {
+      .hero, .meta-row, .chart-grid, .secondary-grid, .three-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 720px) {
+      .page { width: min(100vw - 12px, 1680px); padding-top: 12px; }
+      .hero-card, .panel, .upload-card { padding: 18px; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .drop-zone { min-height: 170px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <div class="hero-card">
+        <h1>Home Energy Dashboard</h1>
+        <p class="lede">
+          Drop in your latest NorthWestern Energy interval export and get an instant view of how your home uses electricity:
+          baseload, peaks, weekday vs. weekend behavior, seasonal shifts, and the hours that shape your bill.
+        </p>
+      </div>
+      <div class="hero-card upload-card">
+        <div id="dropZone" class="drop-zone" tabindex="0" role="button" aria-label="Upload energy CSV">
+          <div>
+            <strong>Upload or drop your NWE CSV</strong>
+            <p>The file should match the hourly `DATE`, `START TIME`, and `USAGE` structure in your export.</p>
+            <div class="button-row">
+              <label class="file-button" for="fileInput">Choose CSV</label>
+              <button id="loadSampleButton" type="button" class="button-secondary">Load sample in page</button>
+            </div>
+          </div>
+        </div>
+        <input id="fileInput" type="file" accept=".csv,text/csv">
+        <div id="errorBox" class="error-box"></div>
+        <p class="fine-print">This page runs entirely in your browser. Your CSV is processed locally and is never uploaded anywhere.</p>
+      </div>
+    </section>
+    <section id="dashboard" class="dashboard">
+      <div class="meta-row">
+        <div class="panel">
+          <div class="chart-header">
+            <div>
+              <h2>Coverage</h2>
+              <div class="chart-subtitle">What this file contains and how complete it is</div>
+            </div>
+          </div>
+          <div id="metaBlock" class="meta-block"></div>
+        </div>
+        <div class="panel">
+          <div class="chart-header">
+            <div>
+              <h2>What To Watch</h2>
+              <div class="chart-subtitle">Plain-English takeaways generated from your data</div>
+            </div>
+          </div>
+          <ul id="insightsList" class="insights"></ul>
+        </div>
+      </div>
+      <div id="statsGrid" class="stats-grid"></div>
+      <div class="panel">
+        <div class="chart-header">
+          <div>
+            <h2>Daily Heatmap</h2>
+            <div class="chart-subtitle">Most recent 8,760 reads, days on the x-axis, hour of day on the y-axis, colored by hourly kWh</div>
+          </div>
+          <label class="chart-controls" for="heatmapZoom">
+            <span>Zoom</span>
+            <input id="heatmapZoom" type="range" min="1" max="4" step="0.25" value="2">
+            <output id="heatmapZoomValue">2.0x</output>
+          </label>
+        </div>
+        <div class="chart-frame heatmap-wrap">
+          <canvas id="heatmapCanvas" height="640"></canvas>
+        </div>
+        <div class="legend">
+          <span>Lower use</span>
+          <div class="legend-gradient"></div>
+          <span>Higher use</span>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="chart-header">
+          <div>
+            <h2>Typical Day Load Shape</h2>
+            <div class="chart-subtitle">Average hourly profile across the most recent 8,760 hourly reads, with optional season and month filters</div>
+          </div>
+          <div class="filter-row">
+            <select id="loadSeasonFilter" aria-label="Typical day season filter"></select>
+            <select id="loadMonthFilter" aria-label="Typical day month filter"></select>
+          </div>
+        </div>
+        <div class="chart-frame">
+          <svg id="loadShapeChart" viewBox="0 0 1280 430" aria-label="Typical day load shape"></svg>
+        </div>
+      </div>
+      <div class="secondary-grid">
+        <div class="panel">
+          <div class="chart-header">
+            <div>
+              <h2>Day Of Week Comparison</h2>
+              <div class="chart-subtitle">Average daily electricity use by weekday, with optional season and month filters</div>
+            </div>
+            <div class="filter-row">
+              <select id="dowSeasonFilter" aria-label="Day of week season filter"></select>
+              <select id="dowMonthFilter" aria-label="Day of week month filter"></select>
+            </div>
+          </div>
+          <div class="chart-frame">
+            <svg id="dowChart" viewBox="0 0 940 410" aria-label="Average use by day of week"></svg>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="chart-header">
+            <div>
+              <h2>Monthly Totals</h2>
+              <div class="chart-subtitle">How usage shifts across months in the file</div>
+            </div>
+          </div>
+          <div class="chart-frame">
+            <svg id="monthlyChart" viewBox="0 0 940 410" aria-label="Monthly usage totals"></svg>
+          </div>
+        </div>
+      </div>
+      <div class="secondary-grid">
+        <div class="panel">
+          <div class="chart-header">
+            <div>
+              <h2>Peak Hour Timing</h2>
+              <div class="chart-subtitle">When the highest 10% of usage hours tend to occur, with optional season and month filters</div>
+            </div>
+            <div class="filter-row">
+              <select id="peakSeasonFilter" aria-label="Peak timing season filter"></select>
+              <select id="peakMonthFilter" aria-label="Peak timing month filter"></select>
+            </div>
+          </div>
+          <div class="chart-frame">
+            <svg id="peakTimingChart" viewBox="0 0 940 410" aria-label="Peak hour timing"></svg>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="chart-header">
+            <div>
+              <h2>Always-On Vs Active Use</h2>
+              <div class="chart-subtitle">A more actionable replacement for the duration curve: estimated baseload compared with the flexible share of each month</div>
+            </div>
+          </div>
+          <div class="chart-frame">
+            <svg id="monthlyBreakdownChart" viewBox="0 0 940 410" aria-label="Monthly baseload versus flexible use"></svg>
+          </div>
+          <div class="chart-note">
+            Read this as: the lower red portion is the estimated always-on energy in each month, while the blue portion is the usage that varies with schedules, weather, appliances, and behavior.
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="chart-header">
+          <div>
+            <h2>Highest-Use Hours</h2>
+            <div class="chart-subtitle">The biggest individual hourly spikes in the file</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Date</th>
+                <th>Hour</th>
+                <th>Usage</th>
+                <th>Day Type</th>
+              </tr>
+            </thead>
+            <tbody id="peaksTableBody"></tbody>
+          </table>
+        </div>
+        <div class="table-note">Helpful for spotting heating, cooling, EV charging, or appliance-driven spikes.</div>
+        <div class="source-note">
+          Dashboard choices were guided by public energy-efficiency guidance emphasizing total consumption, time-of-use patterns, peak demand timing, and appliance/home energy understanding:
+          <a href="https://www.energy.gov/energysaver/estimating-appliance-and-home-electronic-energy-use" target="_blank" rel="noreferrer">U.S. Department of Energy</a>.
+          A few metrics here are inferred from interval-data practice rather than directly prescribed by that page, especially the baseload estimate and load factor.
+        </div>
+      </div>
+    </section>
+    <section id="emptyState" class="panel empty-state">
+      Upload a CSV to populate the dashboard. The sample button is included so you can test the page immediately with the NWE export structure in this workspace.
+    </section>
+  </div>
+  <div id="tooltip" class="tooltip"></div>
+  <script>
+    const sampleCsvText = `READ TYPE,DATE,START TIME,END TIME,USAGE,UNIT OF MEASURE,METER TYPE,METER ID,DEMAND,DEMAND UNIT OF MEASURE
+delivered,2025-01-01,0:00,0:59,2.055,kWh,electric,2000446621,,
+delivered,2025-01-01,1:00,1:59,2.167,kWh,electric,2000446621,,
+delivered,2025-01-01,2:00,2:59,2.175,kWh,electric,2000446621,,
+delivered,2025-01-01,3:00,3:59,2.306,kWh,electric,2000446621,,
+delivered,2025-01-01,4:00,4:59,2.215,kWh,electric,2000446621,,
+delivered,2025-01-01,5:00,5:59,2.556,kWh,electric,2000446621,,
+delivered,2025-01-01,6:00,6:59,2.077,kWh,electric,2000446621,,
+delivered,2025-01-01,7:00,7:59,2.298,kWh,electric,2000446621,,
+delivered,2025-01-01,8:00,8:59,2.341,kWh,electric,2000446621,,
+delivered,2025-01-01,9:00,9:59,2.62,kWh,electric,2000446621,,
+delivered,2025-01-01,10:00,10:59,2.462,kWh,electric,2000446621,,
+delivered,2025-01-01,11:00,11:59,1.992,kWh,electric,2000446621,,
+delivered,2025-01-01,12:00,12:59,3.652,kWh,electric,2000446621,,
+delivered,2025-01-01,13:00,13:59,3.148,kWh,electric,2000446621,,
+delivered,2025-01-01,14:00,14:59,2.31,kWh,electric,2000446621,,
+delivered,2025-01-01,15:00,15:59,1.7,kWh,electric,2000446621,,
+delivered,2025-01-01,16:00,16:59,2.778,kWh,electric,2000446621,,
+delivered,2025-01-01,17:00,17:59,2.353,kWh,electric,2000446621,,
+delivered,2025-01-01,18:00,18:59,2.087,kWh,electric,2000446621,,
+delivered,2025-01-01,19:00,19:59,2.023,kWh,electric,2000446621,,
+delivered,2025-01-01,20:00,20:59,2.417,kWh,electric,2000446621,,
+delivered,2025-01-01,21:00,21:59,2.621,kWh,electric,2000446621,,
+delivered,2025-01-01,22:00,22:59,1.964,kWh,electric,2000446621,,
+delivered,2025-01-01,23:00,23:59,2.359,kWh,electric,2000446621,,`;
+
+    const ui = {
+      dropZone: document.getElementById("dropZone"),
+      fileInput: document.getElementById("fileInput"),
+      loadSampleButton: document.getElementById("loadSampleButton"),
+      dashboard: document.getElementById("dashboard"),
+      emptyState: document.getElementById("emptyState"),
+      errorBox: document.getElementById("errorBox"),
+      metaBlock: document.getElementById("metaBlock"),
+      insightsList: document.getElementById("insightsList"),
+      statsGrid: document.getElementById("statsGrid"),
+      heatmapCanvas: document.getElementById("heatmapCanvas"),
+      heatmapZoom: document.getElementById("heatmapZoom"),
+      heatmapZoomValue: document.getElementById("heatmapZoomValue"),
+      loadShapeChart: document.getElementById("loadShapeChart"),
+      loadSeasonFilter: document.getElementById("loadSeasonFilter"),
+      loadMonthFilter: document.getElementById("loadMonthFilter"),
+      dowChart: document.getElementById("dowChart"),
+      dowSeasonFilter: document.getElementById("dowSeasonFilter"),
+      dowMonthFilter: document.getElementById("dowMonthFilter"),
+      monthlyChart: document.getElementById("monthlyChart"),
+      peakTimingChart: document.getElementById("peakTimingChart"),
+      peakSeasonFilter: document.getElementById("peakSeasonFilter"),
+      peakMonthFilter: document.getElementById("peakMonthFilter"),
+      monthlyBreakdownChart: document.getElementById("monthlyBreakdownChart"),
+      peaksTableBody: document.getElementById("peaksTableBody"),
+      tooltip: document.getElementById("tooltip")
+    };
+
+    const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const FILTER_MONTHS = ["All months", ...MONTH_NAMES];
+    const FILTER_SEASONS = ["All seasons", "Winter", "Spring", "Summer", "Fall"];
+
+    function showError(message) {
+      ui.errorBox.style.display = "block";
+      ui.errorBox.textContent = message;
+    }
+
+    function clearError() {
+      ui.errorBox.style.display = "none";
+      ui.errorBox.textContent = "";
+    }
+
+    function formatNumber(value, digits = 1) {
+      return new Intl.NumberFormat("en-US", {
+        maximumFractionDigits: digits,
+        minimumFractionDigits: digits
+      }).format(value);
+    }
+
+    function formatCompact(value) {
+      return new Intl.NumberFormat("en-US", {
+        notation: "compact",
+        maximumFractionDigits: 1
+      }).format(value);
+    }
+
+    function formatPercent(value) {
+      return `${formatNumber(value * 100, 0)}%`;
+    }
+
+    function normalizedHour(hour) {
+      return ((hour % 24) + 24) % 24;
+    }
+
+    function formatHour(hour) {
+      const normalized = normalizedHour(hour);
+      return `${String(normalized).padStart(2, "0")}:00`;
+    }
+
+    function formatHour12(hour) {
+      const normalized = normalizedHour(hour);
+      const suffix = normalized >= 12 ? "PM" : "AM";
+      const hour12 = normalized % 12 === 0 ? 12 : normalized % 12;
+      return `${hour12}:00 ${suffix}`;
+    }
+
+    function seasonForMonth(monthNumber) {
+      if ([12, 1, 2].includes(monthNumber)) return "Winter";
+      if ([3, 4, 5].includes(monthNumber)) return "Spring";
+      if ([6, 7, 8].includes(monthNumber)) return "Summer";
+      return "Fall";
+    }
+
+    function fillSelectOptions(select, labels) {
+      select.innerHTML = labels.map((label, index) => `<option value="${index === 0 ? "all" : label}">${label}</option>`).join("");
+    }
+
+    function getFilterState(prefix) {
+      return {
+        season: ui[`${prefix}SeasonFilter`].value,
+        month: ui[`${prefix}MonthFilter`].value
+      };
+    }
+
+    function applyRecordFilters(records, filters) {
+      return records.filter((record) => {
+        const monthNumber = record.dt.getMonth() + 1;
+        const season = seasonForMonth(monthNumber);
+        const monthLabel = MONTH_NAMES[monthNumber - 1];
+        const seasonPass = !filters.season || filters.season === "all" || filters.season === season;
+        const monthPass = !filters.month || filters.month === "all" || filters.month === monthLabel;
+        return seasonPass && monthPass;
+      });
+    }
+
+    function percentile(values, p) {
+      if (!values.length) return 0;
+      const sorted = [...values].sort((a, b) => a - b);
+      const index = (sorted.length - 1) * p;
+      const lower = Math.floor(index);
+      const upper = Math.ceil(index);
+      if (lower === upper) return sorted[lower];
+      const weight = index - lower;
+      return sorted[lower] * (1 - weight) + sorted[upper] * weight;
+    }
+
+    function parseCSV(text) {
+      const rows = [];
+      let row = [];
+      let field = "";
+      let inQuotes = false;
+      for (let i = 0; i < text.length; i += 1) {
+        const char = text[i];
+        const next = text[i + 1];
+        if (char === "\"") {
+          if (inQuotes && next === "\"") {
+            field += "\"";
+            i += 1;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === "," && !inQuotes) {
+          row.push(field);
+          field = "";
+        } else if ((char === "\n" || char === "\r") && !inQuotes) {
+          if (char === "\r" && next === "\n") i += 1;
+          row.push(field);
+          if (row.some((cell) => cell !== "")) rows.push(row);
+          row = [];
+          field = "";
+        } else {
+          field += char;
+        }
+      }
+      if (field !== "" || row.length) {
+        row.push(field);
+        rows.push(row);
+      }
+      return rows;
+    }
+
+    function parseUsageFile(text, fileName = "Uploaded file") {
+      const rawRows = parseCSV(text.trim());
+      if (rawRows.length < 2) throw new Error("The CSV appears to be empty or incomplete.");
+      const headers = rawRows[0].map((header) => String(header || "").trim().toUpperCase());
+      const dateIndex = headers.indexOf("DATE");
+      const startIndex = headers.indexOf("START TIME");
+      const usageIndex = headers.indexOf("USAGE");
+      if (dateIndex === -1 || startIndex === -1 || usageIndex === -1) {
+        throw new Error("This file is missing one of the required columns: DATE, START TIME, or USAGE.");
+      }
+      const records = [];
+      for (let i = 1; i < rawRows.length; i += 1) {
+        const row = rawRows[i];
+        const dateStr = String(row[dateIndex] || "").trim();
+        const startTime = String(row[startIndex] || "").trim();
+        const usage = Number.parseFloat(String(row[usageIndex] || "").trim());
+        if (!dateStr || Number.isNaN(usage)) continue;
+        const hour = Number.parseInt(startTime.split(":")[0], 10);
+        if (Number.isNaN(hour) || hour < 0 || hour > 23) continue;
+        const dt = new Date(`${dateStr}T${String(hour).padStart(2, "0")}:00:00`);
+        records.push({ dateStr, startTime, usage, hour, dt });
+      }
+      if (!records.length) throw new Error("No valid hourly rows were found in the CSV.");
+      records.sort((a, b) => a.dt - b.dt);
+      const latestRecord = records[records.length - 1];
+      const filteredRecords = records.length > 8760 ? records.slice(-8760) : records;
+      return computeDashboardData(filteredRecords, fileName, {
+        sourceStart: records[0].dateStr,
+        sourceEnd: latestRecord.dateStr,
+        windowStart: filteredRecords[0].dateStr,
+        windowEnd: filteredRecords[filteredRecords.length - 1].dateStr
+      });
+    }
+
+    function computeDashboardData(records, fileName, context = {}) {
+      const byDay = new Map();
+      const byMonth = new Map();
+      const hourlyAll = Array.from({ length: 24 }, () => []);
+      const weekdayHourly = Array.from({ length: 24 }, () => []);
+      const weekendHourly = Array.from({ length: 24 }, () => []);
+      const dowDailyTotals = Array.from({ length: 7 }, () => []);
+      const peakHoursByHour = Array(24).fill(0);
+      const periodBuckets = {
+        weekday: { morning: [], afternoon: [], evening: [] },
+        weekend: { morning: [], afternoon: [], evening: [] }
+      };
+      let totalUsage = 0;
+      let maxRecord = records[0];
+      let minRecord = records[0];
+      records.forEach((record) => {
+        totalUsage += record.usage;
+        if (record.usage > maxRecord.usage) maxRecord = record;
+        if (record.usage < minRecord.usage) minRecord = record;
+        const monthKey = record.dateStr.slice(0, 7);
+        byMonth.set(monthKey, (byMonth.get(monthKey) || 0) + record.usage);
+        if (!byDay.has(record.dateStr)) {
+          const dow = new Date(`${record.dateStr}T12:00:00`).getDay();
+          byDay.set(record.dateStr, { dateStr: record.dateStr, dow, total: 0, count: 0, hours: Array(24).fill(null) });
+        }
+        const day = byDay.get(record.dateStr);
+        day.total += record.usage;
+        day.count += 1;
+        day.hours[record.hour] = record.usage;
+        hourlyAll[record.hour].push(record.usage);
+        const bucketKey = day.dow === 0 || day.dow === 6 ? "weekend" : "weekday";
+        if (bucketKey === "weekend") weekendHourly[record.hour].push(record.usage);
+        else weekdayHourly[record.hour].push(record.usage);
+        if (record.hour >= 6 && record.hour < 12) periodBuckets[bucketKey].morning.push(record.usage);
+        if (record.hour >= 12 && record.hour < 18) periodBuckets[bucketKey].afternoon.push(record.usage);
+        if (record.hour >= 18 && record.hour < 24) periodBuckets[bucketKey].evening.push(record.usage);
+      });
+      const days = [...byDay.values()].sort((a, b) => a.dateStr.localeCompare(b.dateStr));
+      days.forEach((day) => { dowDailyTotals[day.dow].push(day.total); });
+      const usages = records.map((record) => record.usage);
+      const p10 = percentile(usages, 0.10);
+      const p90 = percentile(usages, 0.90);
+      records.forEach((record) => { if (record.usage >= p90) peakHoursByHour[record.hour] += 1; });
+      const average = (bucket) => bucket.length ? bucket.reduce((sum, value) => sum + value, 0) / bucket.length : 0;
+      const typicalAll = hourlyAll.map(average);
+      const typicalWeekday = weekdayHourly.map(average);
+      const typicalWeekend = weekendHourly.map(average);
+      const completeDays = days.filter((day) => day.count === 24);
+      const avgDaily = totalUsage / days.length;
+      const avgHourly = totalUsage / records.length;
+      const loadFactor = maxRecord.usage ? avgHourly / maxRecord.usage : 0;
+      const missingHours = days.reduce((sum, day) => sum + (24 - day.count), 0);
+      const weekdayDays = days.filter((day) => day.dow !== 0 && day.dow !== 6);
+      const weekendDays = days.filter((day) => day.dow === 0 || day.dow === 6);
+      const weekdayAvgDaily = weekdayDays.length ? weekdayDays.reduce((sum, day) => sum + day.total, 0) / weekdayDays.length : 0;
+      const weekendAvgDaily = weekendDays.length ? weekendDays.reduce((sum, day) => sum + day.total, 0) / weekendDays.length : 0;
+      const overnightAvg = [0, 1, 2, 3, 4, 5].reduce((sum, hour) => sum + typicalAll[hour], 0) / 6;
+      const highUseMonth = [...byMonth.entries()].sort((a, b) => b[1] - a[1])[0];
+      const lowUseMonth = [...byMonth.entries()].sort((a, b) => a[1] - b[1])[0];
+      const topPeakHour = peakHoursByHour.indexOf(Math.max(...peakHoursByHour));
+      const topTenPeaks = [...records].sort((a, b) => b.usage - a.usage).slice(0, 10);
+      const radialByDow = DAY_NAMES.map((_, dow) => {
+        const morning = [];
+        const afternoon = [];
+        const evening = [];
+        records.forEach((record) => {
+          if (record.dt.getDay() !== dow) return;
+          if (record.hour >= 6 && record.hour < 12) morning.push(record.usage);
+          if (record.hour >= 12 && record.hour < 18) afternoon.push(record.usage);
+          if (record.hour >= 18 && record.hour < 24) evening.push(record.usage);
+        });
+        return { morning: average(morning), afternoon: average(afternoon), evening: average(evening) };
+      });
+      const monthlyBaseload = [...byMonth.entries()]
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([key, total]) => {
+          const hours = records.filter((record) => record.dateStr.startsWith(key)).length;
+          const baseload = Math.min(total, p10 * hours);
+          return { key, baseload, flexible: Math.max(0, total - baseload) };
+        });
+      return {
+        fileName, records, days, completeDays, byMonth, totalUsage, avgDaily, avgHourly, loadFactor, maxRecord, minRecord,
+        baseloadEstimate: p10, peakThreshold: p90, typicalAll, typicalWeekday, typicalWeekend, dowDailyTotals,
+        peakHoursByHour, missingHours, weekdayAvgDaily, weekendAvgDaily, overnightAvg, highUseMonth, lowUseMonth, topPeakHour, topTenPeaks,
+        radialByDow, monthlyBaseload, sourceStart: context.sourceStart, sourceEnd: context.sourceEnd, windowStart: context.windowStart, windowEnd: context.windowEnd
+      };
+    }
+
+    function monthLabel(monthKey) {
+      const [year, month] = monthKey.split("-");
+      return `${MONTH_NAMES[Number(month) - 1]} ${year}`;
+    }
+
+    function buildMeta(data) {
+      const firstDate = data.records[0].dateStr;
+      const lastDate = data.records[data.records.length - 1].dateStr;
+      const values = [
+        ["File", data.fileName],
+        ["Date range", `${firstDate} to ${lastDate}`],
+        ["Rows", formatCompact(data.records.length)],
+        ["Days", formatCompact(data.days.length)],
+        ["Window", "Most recent 8,760 reads"],
+        ["Complete days", `${data.completeDays.length}/${data.days.length}`],
+        ["Missing hours", String(data.missingHours)]
+      ];
+      ui.metaBlock.innerHTML = values.map(([label, value]) => `
+        <div class="meta-item">
+          <div class="label">${label}</div>
+          <div class="value">${value}</div>
+        </div>
+      `).join("");
+    }
+
+    function buildStats(data) {
+      const weekendShift = data.weekdayAvgDaily && data.weekendAvgDaily
+        ? (data.weekendAvgDaily - data.weekdayAvgDaily) / data.weekdayAvgDaily
+        : 0;
+      const stats = [
+        { label: "Total usage", value: `${formatNumber(data.totalUsage, 0)} kWh`, note: "Shown window: most recent 8,760 reads", className: "stat-accent" },
+        { label: "Average day", value: `${formatNumber(data.avgDaily, 1)} kWh`, note: "Daily average across the shown window", className: "" },
+        { label: "Estimated baseload", value: `${formatNumber(data.baseloadEstimate, 2)} kWh/hr`, note: "10th percentile hourly usage", className: "stat-secondary" },
+        { label: "Peak hour", value: `${formatNumber(data.maxRecord.usage, 2)} kWh`, note: `${data.maxRecord.dateStr} at ${data.maxRecord.startTime}`, className: "stat-accent" },
+        { label: "Load factor", value: formatPercent(data.loadFactor), note: `Weekend daily use is ${weekendShift >= 0 ? "+" : ""}${formatPercent(weekendShift)} vs weekday`, className: "stat-secondary" }
+      ];
+      ui.statsGrid.innerHTML = stats.map((stat) => `
+        <div class="stat-card">
+          <div class="stat-label">${stat.label}</div>
+          <div class="stat-value ${stat.className}">${stat.value}</div>
+          <div class="meta-text">${stat.note}</div>
+        </div>
+      `).join("");
+    }
+
+    function buildInsights(data) {
+      const peakWindow = `${String(data.topPeakHour).padStart(2, "0")}:00-${String(data.topPeakHour + 1).padStart(2, "0")}:00`;
+      const highMonthLabel = monthLabel(data.highUseMonth[0]);
+      const lowMonthLabel = monthLabel(data.lowUseMonth[0]);
+      const highVsLowPct = data.lowUseMonth[1] ? (data.highUseMonth[1] - data.lowUseMonth[1]) / data.lowUseMonth[1] : 0;
+      const baseloadShare = data.avgHourly ? data.baseloadEstimate / data.avgHourly : 0;
+      const overnightGap = data.overnightAvg ? (data.avgHourly - data.overnightAvg) / data.overnightAvg : 0;
+      const weekendDiff = Math.abs((data.weekendAvgDaily - data.weekdayAvgDaily) / (data.weekdayAvgDaily || 1));
+      const insights = [
+        `Your baseline draw is about ${formatNumber(data.baseloadEstimate, 2)} kWh/hr, which is roughly ${formatPercent(baseloadShare)} of your average hour.`,
+        `The most common peak window in your top 10% hours is ${peakWindow}, a useful clue for HVAC, water heating, EV charging, or cooking loads.`,
+        `${highMonthLabel} is your highest-use month in this file, about ${formatPercent(highVsLowPct)} above ${lowMonthLabel}.`,
+        `Average weekend daily use is ${data.weekendAvgDaily >= data.weekdayAvgDaily ? "higher" : "lower"} than weekdays by ${formatPercent(weekendDiff)}.`,
+        `Compared with your overnight profile, the average hour is ${formatPercent(Math.max(overnightGap, 0))} higher, which suggests how much of your usage is flexible rather than always-on.`,
+        `If your upload contains more history, the dashboard intentionally trims to the most recent 8,760 reads ending ${data.records[data.records.length - 1].dateStr}.`
+      ];
+      ui.insightsList.innerHTML = insights.map((item) => `<li>${item}</li>`).join("");
+    }
+
+    function colorForHeat(value, min, max) {
+      if (value == null) return "rgba(110, 123, 127, 0.12)";
+      const t = max === min ? 0.5 : Math.max(0, Math.min(1, (value - min) / (max - min)));
+      const stops = [[242, 247, 252], [109, 169, 210], [0, 75, 135], [195, 34, 51]];
+      const segment = Math.min(stops.length - 2, Math.floor(t * (stops.length - 1)));
+      const localT = (t * (stops.length - 1)) - segment;
+      const start = stops[segment];
+      const end = stops[segment + 1];
+      const rgb = start.map((channel, index) => Math.round(channel + (end[index] - channel) * localT));
+      return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+    }
+
+    function showTooltip(x, y, html) {
+      ui.tooltip.innerHTML = html.replace(/\|/g, "<br>");
+      ui.tooltip.style.left = `${x}px`;
+      ui.tooltip.style.top = `${y}px`;
+      ui.tooltip.classList.add("visible");
+    }
+
+    function hideTooltip() {
+      ui.tooltip.classList.remove("visible");
+    }
+
+    function attachSvgTooltips(svg) {
+      svg.querySelectorAll("[data-tip]").forEach((element) => {
+        element.addEventListener("mousemove", (event) => {
+          showTooltip(event.clientX, event.clientY, element.getAttribute("data-tip"));
+        });
+        element.addEventListener("mouseleave", hideTooltip);
+      });
+    }
+
+    function drawHeatmap(data) {
+      const canvas = ui.heatmapCanvas;
+      const parentWidth = canvas.parentElement.clientWidth;
+      const zoom = Number.parseFloat(ui.heatmapZoom.value || "2");
+      ui.heatmapZoomValue.value = `${zoom.toFixed(1)}x`;
+      ui.heatmapZoomValue.textContent = `${zoom.toFixed(1)}x`;
+      const baseCellWidth = Math.max(6, Math.floor((parentWidth - 90) / Math.max(data.days.length, 1)));
+      const dayWidth = Math.max(8, baseCellWidth * zoom);
+      const width = Math.max(parentWidth, 80 + dayWidth * data.days.length + 20);
+      const height = 640;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, width, height);
+      const margin = { top: 18, right: 18, bottom: 52, left: 68 };
+      const plotWidth = width - margin.left - margin.right;
+      const plotHeight = height - margin.top - margin.bottom;
+      const cellWidth = plotWidth / data.days.length;
+      const cellHeight = plotHeight / 24;
+      const values = data.records.map((record) => record.usage);
+      const min = percentile(values, 0.05);
+      const max = percentile(values, 0.95);
+      ctx.font = "13px 'Trebuchet MS', 'Aptos', 'Segoe UI', sans-serif";
+      ctx.fillStyle = "#5e6a6d";
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      for (let hour = 0; hour < 24; hour += 1) {
+        const y = margin.top + hour * cellHeight + cellHeight / 2;
+        ctx.fillText(formatHour12(hour), margin.left - 8, y);
+      }
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      const tickStep = Math.max(1, Math.round(data.days.length / Math.max(7, Math.floor(width / 140))));
+      for (let i = 0; i < data.days.length; i += tickStep) {
+        const x = margin.left + i * cellWidth + cellWidth / 2;
+        ctx.fillText(data.days[i].dateStr.slice(5), x, height - margin.bottom + 10);
+      }
+      data.days.forEach((day, dayIndex) => {
+        day.hours.forEach((value, hour) => {
+          const x = margin.left + dayIndex * cellWidth;
+          const y = margin.top + hour * cellHeight;
+          ctx.fillStyle = colorForHeat(value, min, max);
+          ctx.fillRect(x, y, Math.ceil(cellWidth), Math.ceil(cellHeight));
+        });
+      });
+      ctx.strokeStyle = "rgba(42, 61, 66, 0.12)";
+      ctx.strokeRect(margin.left, margin.top, plotWidth, plotHeight);
+      canvas.onmousemove = (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        if (x < margin.left || x > width - margin.right || y < margin.top || y > height - margin.bottom) {
+          hideTooltip();
+          return;
+        }
+        const dayIndex = Math.min(data.days.length - 1, Math.max(0, Math.floor((x - margin.left) / cellWidth)));
+        const hour = Math.min(23, Math.max(0, Math.floor((y - margin.top) / cellHeight)));
+        const day = data.days[dayIndex];
+        const value = day.hours[hour];
+        showTooltip(event.clientX, event.clientY, `${day.dateStr}<br>${formatHour12(hour)}-${formatHour12(hour + 1)}<br>${value == null ? "No reading" : `${formatNumber(value, 3)} kWh`}`);
+      };
+      canvas.onmouseleave = hideTooltip;
+    }
+
+    function svgLineChart(svg, series, options) {
+      const width = options.width || 940;
+      const height = options.height || 430;
+      const margin = { top: 28, right: 18, bottom: 52, left: 64 };
+      const plotWidth = width - margin.left - margin.right;
+      const plotHeight = height - margin.top - margin.bottom;
+      const allValues = series.flatMap((item) => item.values);
+      const maxValue = Math.max(...allValues, options.yMax || 0) * 1.08;
+      const x = (index) => margin.left + (plotWidth * index) / (options.xLabels.length - 1 || 1);
+      const y = (value) => margin.top + plotHeight - (value / (maxValue || 1)) * plotHeight;
+      const xTicks = options.xLabels.map((label, index) => `<text x="${x(index)}" y="${height - 18}" text-anchor="middle" fill="#4f6777" font-size="13">${label}</text>`).join("");
+      const yTicks = Array.from({ length: 5 }, (_, i) => {
+        const value = (maxValue / 4) * i;
+        const yPos = y(value);
+        return `<line x1="${margin.left}" y1="${yPos}" x2="${width - margin.right}" y2="${yPos}" stroke="rgba(0,76,125,0.08)" /><text x="${margin.left - 10}" y="${yPos + 4}" text-anchor="end" fill="#4f6777" font-size="13">${formatNumber(value, 1)}</text>`;
+      }).join("");
+      const paths = series.map((item) => {
+        const d = item.values.map((value, index) => `${index === 0 ? "M" : "L"} ${x(index)} ${y(value)}`).join(" ");
+        const points = item.values.map((value, index) => `<circle cx="${x(index)}" cy="${y(value)}" r="4" fill="${item.color}" data-tip="${item.name}|${options.xLabels[index] || index}|${formatNumber(value, 2)} ${options.unit}" />`).join("");
+        return `<path d="${d}" fill="none" stroke="${item.color}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" />${points}`;
+      }).join("");
+      const legend = series.map((item, index) => `<g transform="translate(${margin.left + index * 180}, 16)"><circle cx="0" cy="0" r="6" fill="${item.color}"></circle><text x="14" y="5" fill="#4f6777" font-size="13">${item.name}</text></g>`).join("");
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      svg.innerHTML = `<rect x="0" y="0" width="${width}" height="${height}" fill="transparent"></rect>${yTicks}<line x1="${margin.left}" y1="${height - margin.bottom}" x2="${width - margin.right}" y2="${height - margin.bottom}" stroke="rgba(0,76,125,0.18)" />${xTicks}${paths}${legend}`;
+      attachSvgTooltips(svg);
+    }
+
+    function svgBarChart(svg, categories, values, options) {
+      const width = options.width || 940;
+      const height = options.height || 410;
+      const margin = { top: 16, right: 18, bottom: 58, left: 64 };
+      const plotWidth = width - margin.left - margin.right;
+      const plotHeight = height - margin.top - margin.bottom;
+      const maxValue = Math.max(...values, 0) * 1.08;
+      const barWidth = plotWidth / values.length * 0.68;
+      const gap = plotWidth / values.length;
+      const y = (value) => margin.top + plotHeight - (value / (maxValue || 1)) * plotHeight;
+      const yTicks = Array.from({ length: 5 }, (_, i) => {
+        const value = (maxValue / 4) * i;
+        const yPos = y(value);
+        return `<line x1="${margin.left}" y1="${yPos}" x2="${width - margin.right}" y2="${yPos}" stroke="rgba(0,76,125,0.08)" /><text x="${margin.left - 10}" y="${yPos + 4}" text-anchor="end" fill="#4f6777" font-size="13">${formatNumber(value, 1)}</text>`;
+      }).join("");
+      const bars = values.map((value, index) => {
+        const x = margin.left + index * gap + (gap - barWidth) / 2;
+        const barHeight = plotHeight - (y(value) - margin.top);
+        return `<rect x="${x}" y="${y(value)}" width="${barWidth}" height="${barHeight}" rx="10" fill="${options.color(index, value)}" data-tip="${categories[index]}|${formatNumber(value, 2)} ${options.unit}"></rect><text x="${x + barWidth / 2}" y="${height - 20}" text-anchor="middle" fill="#4f6777" font-size="13">${categories[index]}</text>`;
+      }).join("");
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      svg.innerHTML = `${yTicks}<line x1="${margin.left}" y1="${height - margin.bottom}" x2="${width - margin.right}" y2="${height - margin.bottom}" stroke="rgba(0,76,125,0.18)" />${bars}`;
+      attachSvgTooltips(svg);
+    }
+
+    function svgStackedBarChart(svg, categories, series, options) {
+      const width = options.width || 940;
+      const height = options.height || 410;
+      const margin = { top: 18, right: 18, bottom: 58, left: 64 };
+      const plotWidth = width - margin.left - margin.right;
+      const plotHeight = height - margin.top - margin.bottom;
+      const totals = categories.map((_, index) => series.reduce((sum, item) => sum + item.values[index], 0));
+      const maxValue = Math.max(...totals, 0) * 1.08;
+      const barWidth = plotWidth / categories.length * 0.62;
+      const gap = plotWidth / categories.length;
+      const y = (value) => margin.top + plotHeight - (value / (maxValue || 1)) * plotHeight;
+      const yTicks = Array.from({ length: 5 }, (_, i) => {
+        const value = (maxValue / 4) * i;
+        const yPos = y(value);
+        return `<line x1="${margin.left}" y1="${yPos}" x2="${width - margin.right}" y2="${yPos}" stroke="rgba(0,76,125,0.08)" /><text x="${margin.left - 10}" y="${yPos + 4}" text-anchor="end" fill="#4f6777" font-size="13">${formatNumber(value, 1)}</text>`;
+      }).join("");
+      const bars = categories.map((category, index) => {
+        const x = margin.left + index * gap + (gap - barWidth) / 2;
+        let running = 0;
+        const layers = series.map((item) => {
+          const value = item.values[index];
+          const yTop = y(running + value);
+          const yBottom = y(running);
+          running += value;
+          return `<rect x="${x}" y="${yTop}" width="${barWidth}" height="${Math.max(0, yBottom - yTop)}" fill="${item.color}" data-tip="${category}|${item.name}: ${formatNumber(value, 1)} ${options.unit}"></rect>`;
+        }).join("");
+        return `${layers}<text x="${x + barWidth / 2}" y="${height - 20}" text-anchor="middle" fill="#4f6777" font-size="13">${category}</text>`;
+      }).join("");
+      const legend = series.map((item, index) => `<g transform="translate(${margin.left + index * 170}, 14)"><rect x="0" y="-7" width="14" height="14" rx="3" fill="${item.color}"></rect><text x="22" y="4" fill="#4f6777" font-size="13">${item.name}</text></g>`).join("");
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      svg.innerHTML = `${yTicks}<line x1="${margin.left}" y1="${height - margin.bottom}" x2="${width - margin.right}" y2="${height - margin.bottom}" stroke="rgba(0,76,125,0.18)" />${bars}${legend}`;
+      attachSvgTooltips(svg);
+    }
+
+    function drawPeaksTable(data) {
+      ui.peaksTableBody.innerHTML = data.topTenPeaks.map((record, index) => {
+        const dow = new Date(`${record.dateStr}T12:00:00`).getDay();
+        const dayType = dow === 0 || dow === 6 ? "Weekend" : "Weekday";
+        return `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${record.dateStr}</td>
+            <td>${formatHour12(record.hour)}-${formatHour12(record.hour + 1)}</td>
+            <td>${formatNumber(record.usage, 3)} kWh</td>
+            <td>${dayType}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function buildDayOfWeekValuesFromRecords(records) {
+      const byDay = new Map();
+      records.forEach((record) => {
+        if (!byDay.has(record.dateStr)) {
+          byDay.set(record.dateStr, {
+            dow: record.dt.getDay(),
+            total: 0
+          });
+        }
+        byDay.get(record.dateStr).total += record.usage;
+      });
+      const buckets = Array.from({ length: 7 }, () => []);
+      [...byDay.values()].forEach((day) => {
+        buckets[day.dow].push(day.total);
+      });
+      return buckets.map((values) => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0);
+    }
+
+    function buildPeakHoursFromRecords(records) {
+      const result = Array(24).fill(0);
+      if (!records.length) return result;
+      const threshold = percentile(records.map((record) => record.usage), 0.90);
+      records.forEach((record) => {
+        if (record.usage >= threshold) result[record.hour] += 1;
+      });
+      return result;
+    }
+
+    function buildLoadShapeFromRecords(records) {
+      const all = Array.from({ length: 24 }, () => []);
+      const weekday = Array.from({ length: 24 }, () => []);
+      const weekend = Array.from({ length: 24 }, () => []);
+      records.forEach((record) => {
+        all[record.hour].push(record.usage);
+        if (record.dt.getDay() === 0 || record.dt.getDay() === 6) weekend[record.hour].push(record.usage);
+        else weekday[record.hour].push(record.usage);
+      });
+      const average = (bucket) => bucket.length ? bucket.reduce((sum, value) => sum + value, 0) / bucket.length : 0;
+      return {
+        all: all.map(average),
+        weekday: weekday.map(average),
+        weekend: weekend.map(average)
+      };
+    }
+
+    function updateFilteredCharts(data) {
+      const loadRecords = applyRecordFilters(data.records, getFilterState("load"));
+      const dowRecords = applyRecordFilters(data.records, getFilterState("dow"));
+      const peakRecords = applyRecordFilters(data.records, getFilterState("peak"));
+      const loadShape = buildLoadShapeFromRecords(loadRecords);
+      const dowValues = buildDayOfWeekValuesFromRecords(dowRecords);
+      const peakValues = buildPeakHoursFromRecords(peakRecords);
+      const topPeakHour = peakValues.indexOf(Math.max(...peakValues));
+      svgLineChart(ui.loadShapeChart, [
+        { name: "All days", values: loadShape.all, color: "#c32233" },
+        { name: "Weekdays", values: loadShape.weekday, color: "#004b87" },
+        { name: "Weekends", values: loadShape.weekend, color: "#6da9d2" }
+      ], {
+        xLabels: Array.from({ length: 24 }, (_, hour) => hour % 3 === 0 ? formatHour12(hour).replace(":00 ", "") : ""),
+        unit: "kWh",
+        height: 430,
+        width: 1280
+      });
+      svgBarChart(ui.dowChart, DAY_NAMES, dowValues, {
+        unit: "kWh/day",
+        height: 410,
+        color: (index) => index === 0 || index === 6 ? "#c32233" : "#004b87"
+      });
+      svgBarChart(ui.peakTimingChart, Array.from({ length: 24 }, (_, hour) => formatHour12(hour).replace(":00 ", "")), peakValues, {
+        unit: "peak hours",
+        height: 410,
+        color: (index, value) => index === topPeakHour ? "#c32233" : value > 0 ? "#004b87" : "rgba(0,75,135,0.18)"
+      });
+    }
+
+    let currentData = null;
+
+    function drawAll(data) {
+      currentData = data;
+      buildMeta(data);
+      buildStats(data);
+      buildInsights(data);
+      drawHeatmap(data);
+      const monthEntries = [...data.byMonth.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+      svgBarChart(ui.monthlyChart, monthEntries.map(([key]) => monthLabel(key)), monthEntries.map(([, value]) => value), {
+        unit: "kWh",
+        height: 410,
+        color: (_, value) => value === Math.max(...monthEntries.map(([, total]) => total)) ? "#c32233" : "#004b87"
+      });
+      svgStackedBarChart(ui.monthlyBreakdownChart, data.monthlyBaseload.map((item) => monthLabel(item.key)), [
+        { name: "Always-on estimate", values: data.monthlyBaseload.map((item) => item.baseload), color: "#c32233" },
+        { name: "Active use", values: data.monthlyBaseload.map((item) => item.flexible), color: "#004b87" }
+      ], {
+        unit: "kWh",
+        height: 410
+      });
+      updateFilteredCharts(data);
+      drawPeaksTable(data);
+      ui.emptyState.style.display = "none";
+      ui.dashboard.classList.add("ready");
+    }
+
+    function handleFile(file) {
+      if (!file) return;
+      clearError();
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = parseUsageFile(String(reader.result || ""), file.name);
+          drawAll(data);
+        } catch (error) {
+          showError(error.message || "Something went wrong while reading the CSV.");
+        }
+      };
+      reader.onerror = () => showError("The browser could not read that file.");
+      reader.readAsText(file);
+    }
+
+    ui.fileInput.addEventListener("change", (event) => {
+      handleFile(event.target.files[0]);
+    });
+
+    ui.dropZone.addEventListener("click", () => ui.fileInput.click());
+    ui.dropZone.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        ui.fileInput.click();
+      }
+    });
+
+    ["dragenter", "dragover"].forEach((eventName) => {
+      ui.dropZone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        ui.dropZone.classList.add("dragover");
+      });
+    });
+
+    ["dragleave", "dragend", "drop"].forEach((eventName) => {
+      ui.dropZone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        ui.dropZone.classList.remove("dragover");
+      });
+    });
+
+    ui.dropZone.addEventListener("drop", (event) => {
+      handleFile(event.dataTransfer.files[0]);
+    });
+
+    ui.loadSampleButton.addEventListener("click", () => {
+      clearError();
+      try {
+        drawAll(parseUsageFile(sampleCsvText, "Built-in sample"));
+      } catch (error) {
+        showError(error.message || "Could not load the built-in sample.");
+      }
+    });
+
+    ui.heatmapZoom.addEventListener("input", () => {
+      if (currentData) drawHeatmap(currentData);
+    });
+
+    fillSelectOptions(ui.loadSeasonFilter, FILTER_SEASONS);
+    fillSelectOptions(ui.loadMonthFilter, FILTER_MONTHS);
+    fillSelectOptions(ui.dowSeasonFilter, FILTER_SEASONS);
+    fillSelectOptions(ui.dowMonthFilter, FILTER_MONTHS);
+    fillSelectOptions(ui.peakSeasonFilter, FILTER_SEASONS);
+    fillSelectOptions(ui.peakMonthFilter, FILTER_MONTHS);
+
+    [ui.loadSeasonFilter, ui.loadMonthFilter, ui.dowSeasonFilter, ui.dowMonthFilter, ui.peakSeasonFilter, ui.peakMonthFilter].forEach((select) => {
+      select.addEventListener("change", () => {
+        if (currentData) updateFilteredCharts(currentData);
+      });
+    });
+
+    window.addEventListener("resize", () => {
+      if (currentData) drawAll(currentData);
+    });
+  </script>
+</body>
+</html>
