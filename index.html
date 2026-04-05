@@ -74,8 +74,8 @@
       z-index: 1;
       height: 100%;
       display: grid;
-      grid-template-columns: 1.25fr 0.9fr;
-      gap: 20px;
+      grid-template-columns: minmax(0, 1.6fr) minmax(300px, 0.95fr);
+      gap: 28px;
       align-items: center;
     }
     h1, h2, h3 {
@@ -83,12 +83,24 @@
       font-family: "Trebuchet MS", "Aptos", "Segoe UI", sans-serif;
       letter-spacing: -0.02em;
     }
-    h1 { font-size: clamp(2.4rem, 4.8vw, 4.8rem); line-height: 0.9; max-width: 13ch; margin-bottom: 14px; }
     .lede { color: var(--muted); max-width: 60ch; font-size: 1.04rem; line-height: 1.6; }
+    .hero-wordmark {
+      margin: 0 0 16px;
+      color: var(--accent-2);
+      font-family: "Courier New", Consolas, monospace;
+      font-size: clamp(0.48rem, 0.68vw, 0.74rem);
+      line-height: 1.06;
+      letter-spacing: 0;
+      white-space: pre;
+      display: inline-block;
+      max-width: 100%;
+    }
     .ascii-shell {
       position: relative;
       z-index: 1;
       padding: 18px;
+      width: min(100%, 370px);
+      justify-self: end;
       border-radius: 18px;
       background: linear-gradient(180deg, rgba(0, 59, 92, 0.96), rgba(7, 49, 76, 0.98));
       border: 1px solid rgba(255,255,255,0.08);
@@ -122,6 +134,7 @@
       display: inline-block;
       width: max-content;
       max-width: 100%;
+      transform: translateX(-12px);
     }
     .upload-card { padding: 22px; display: flex; flex-direction: column; gap: 14px; }
     .drop-zone {
@@ -255,6 +268,33 @@
       gap: 10px;
       flex-wrap: wrap;
     }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .series-toggle {
+      appearance: none;
+      border: 1px solid rgba(0, 75, 135, 0.14);
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.86);
+      color: var(--ink);
+      font: inherit;
+      font-size: 0.92rem;
+      cursor: pointer;
+      transition: background 140ms ease, color 140ms ease, border-color 140ms ease, transform 140ms ease;
+    }
+    .series-toggle:hover {
+      transform: translateY(-1px);
+    }
+    .series-toggle.active {
+      background: var(--accent-2);
+      color: #fff;
+      border-color: var(--accent-2);
+    }
     .filter-row select {
       appearance: none;
       border: 1px solid rgba(0, 75, 135, 0.16);
@@ -337,7 +377,18 @@
       <div class="hero-card hero-banner">
         <div class="hero-banner-inner">
           <div>
-            <h1>NorthWestern Energy Wizard</h1>
+            <pre class="hero-wordmark">_____   __            ___________ ___       __           _____                    
+___  | / /______________  /___  /___ |     / /_____________  /___________________ 
+__   |/ /_  __ \_  ___/  __/_  __ \_ | /| / /_  _ \_  ___/  __/  _ \_  ___/_  __ \
+_  /|  / / /_/ /  /   / /_ _  / / /_ |/ |/ / /  __/(__  )/ /_ /  __/  /   _  / / /
+/_/ |_/  \____//_/    \__/ /_/ /_/____/|__/  \___//____/ \__/ \___//_/    /_/ /_/ 
+                                                                                  
+__________                                       ___       ______                 
+___  ____/_________________________ _____  __    __ |     / /__(_)_____          
+__  __/  __  __ \  _ \_  ___/_  __ `/_  / / /    __ | /| / /__  /___  /          
+_  /___  _  / / /  __/  /   _  /_/ /_  /_/ /     __ |/ |/ / _  / __  /_          
+/_____/  /_/ /_/\___//_/    _\__, / _\__, /      ____/|__/  /_/  _____/          
+                            /____/  /____/                                        </pre>
             <p class="lede">
               Drop in your latest NorthWestern Energy interval export and get an instant view of how your home uses electricity:
               baseload, peaks, weekday vs. weekend behavior, seasonal shifts, and the hours that shape your bill.
@@ -433,6 +484,11 @@
           <div>
             <h2>Typical Day Load Shape</h2>
             <div class="chart-subtitle">Average hourly profile across the most recent 8,760 hourly reads, with optional season and month filters</div>
+            <div class="toggle-row">
+              <button id="toggleLoadAll" class="series-toggle active" type="button">All days</button>
+              <button id="toggleLoadWeekday" class="series-toggle active" type="button">Weekdays</button>
+              <button id="toggleLoadWeekend" class="series-toggle active" type="button">Weekends</button>
+            </div>
           </div>
           <div class="filter-row">
             <select id="loadSeasonFilter" aria-label="Typical day season filter"></select>
@@ -579,6 +635,9 @@ delivered,2025-01-01,23:00,23:59,2.359,kWh,electric,2000446621,,`;
       loadShapeChart: document.getElementById("loadShapeChart"),
       loadSeasonFilter: document.getElementById("loadSeasonFilter"),
       loadMonthFilter: document.getElementById("loadMonthFilter"),
+      toggleLoadAll: document.getElementById("toggleLoadAll"),
+      toggleLoadWeekday: document.getElementById("toggleLoadWeekday"),
+      toggleLoadWeekend: document.getElementById("toggleLoadWeekend"),
       dowChart: document.getElementById("dowChart"),
       dowSeasonFilter: document.getElementById("dowSeasonFilter"),
       dowMonthFilter: document.getElementById("dowMonthFilter"),
@@ -595,6 +654,11 @@ delivered,2025-01-01,23:00,23:59,2.359,kWh,electric,2000446621,,`;
     const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const FILTER_MONTHS = ["All months", ...MONTH_NAMES];
     const FILTER_SEASONS = ["All seasons", "Winter", "Spring", "Summer", "Fall"];
+    const loadSeriesState = {
+      all: true,
+      weekday: true,
+      weekend: true
+    };
 
     function showError(message) {
       ui.errorBox.style.display = "block";
@@ -667,6 +731,12 @@ delivered,2025-01-01,23:00,23:59,2.359,kWh,electric,2000446621,,`;
         const monthPass = !filters.month || filters.month === "all" || filters.month === monthLabel;
         return seasonPass && monthPass;
       });
+    }
+
+    function syncLoadToggleButtons() {
+      ui.toggleLoadAll.classList.toggle("active", loadSeriesState.all);
+      ui.toggleLoadWeekday.classList.toggle("active", loadSeriesState.weekday);
+      ui.toggleLoadWeekend.classList.toggle("active", loadSeriesState.weekend);
     }
 
     function percentile(values, p) {
@@ -1153,14 +1223,16 @@ delivered,2025-01-01,23:00,23:59,2.359,kWh,electric,2000446621,,`;
       const dowRecords = applyRecordFilters(data.records, getFilterState("dow"));
       const peakRecords = applyRecordFilters(data.records, getFilterState("peak"));
       const loadShape = buildLoadShapeFromRecords(loadRecords);
+      const loadSeries = [];
+      if (loadSeriesState.all) loadSeries.push({ name: "All days", values: loadShape.all, color: "#c32233" });
+      if (loadSeriesState.weekday) loadSeries.push({ name: "Weekdays", values: loadShape.weekday, color: "#004b87" });
+      if (loadSeriesState.weekend) loadSeries.push({ name: "Weekends", values: loadShape.weekend, color: "#6da9d2" });
+      const safeLoadSeries = loadSeries.length ? loadSeries : [{ name: "All days", values: loadShape.all, color: "#c32233" }];
       const dowValues = buildDayOfWeekValuesFromRecords(dowRecords);
       const peakValues = buildPeakHoursFromRecords(peakRecords);
       const topPeakHour = peakValues.indexOf(Math.max(...peakValues));
-      svgLineChart(ui.loadShapeChart, [
-        { name: "All days", values: loadShape.all, color: "#c32233" },
-        { name: "Weekdays", values: loadShape.weekday, color: "#004b87" },
-        { name: "Weekends", values: loadShape.weekend, color: "#6da9d2" }
-      ], {
+      syncLoadToggleButtons();
+      svgLineChart(ui.loadShapeChart, safeLoadSeries, {
         xLabels: Array.from({ length: 24 }, (_, hour) => hour % 3 === 0 ? formatHour12(hour).replace(":00 ", "") : ""),
         unit: "kWh",
         height: 430,
@@ -1273,6 +1345,17 @@ delivered,2025-01-01,23:00,23:59,2.359,kWh,electric,2000446621,,`;
 
     [ui.loadSeasonFilter, ui.loadMonthFilter, ui.dowSeasonFilter, ui.dowMonthFilter, ui.peakSeasonFilter, ui.peakMonthFilter].forEach((select) => {
       select.addEventListener("change", () => {
+        if (currentData) updateFilteredCharts(currentData);
+      });
+    });
+
+    [
+      ["toggleLoadAll", "all"],
+      ["toggleLoadWeekday", "weekday"],
+      ["toggleLoadWeekend", "weekend"]
+    ].forEach(([id, key]) => {
+      ui[id].addEventListener("click", () => {
+        loadSeriesState[key] = !loadSeriesState[key];
         if (currentData) updateFilteredCharts(currentData);
       });
     });
