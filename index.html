@@ -1446,8 +1446,10 @@ _  /___  _  / / /  __/  /   _  /_/ /_  /_/ /     __ |/ |/ / _  / __  /_
       const tickStep = Math.max(1, Math.round(data.days.length / Math.max(7, Math.floor(width / 140))));
       for (let i = 0; i < data.days.length; i += tickStep) {
         const x = margin.left + i * cellWidth + cellWidth / 2;
-        xCtx.fillText(data.days[i].dateStr.slice(5), x, 8);
+        xCtx.textAlign = i === 0 ? "left" : "center";
+        xCtx.fillText(data.days[i].dateStr.slice(5), i === 0 ? margin.left + 2 : x, 8);
       }
+      xCtx.textAlign = "center";
       data.days.forEach((day, dayIndex) => {
         day.hours.forEach((value, hour) => {
           const x = margin.left + dayIndex * cellWidth;
