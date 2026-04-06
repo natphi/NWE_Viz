@@ -397,7 +397,7 @@
     }
     .heatmap-shell {
       display: grid;
-      grid-template-columns: 64px 1fr;
+      grid-template-columns: 78px 1fr;
       grid-template-rows: 1fr auto;
       gap: 0 8px;
       align-items: stretch;
@@ -1409,9 +1409,9 @@ _  /___  _  / / /  __/  /   _  /_/ /_  /_/ /     __ |/ |/ / _  / __  /_
       xAxisCanvas.height = xAxisHeight * dpr;
       xAxisCanvas.style.width = `${width}px`;
       xAxisCanvas.style.height = `${xAxisHeight}px`;
-      yAxisCanvas.width = 64 * dpr;
+      yAxisCanvas.width = 78 * dpr;
       yAxisCanvas.height = height * dpr;
-      yAxisCanvas.style.width = `64px`;
+      yAxisCanvas.style.width = `78px`;
       yAxisCanvas.style.height = `${height}px`;
       const ctx = canvas.getContext("2d");
       const xCtx = xAxisCanvas.getContext("2d");
@@ -1434,10 +1434,10 @@ _  /___  _  / / /  __/  /   _  /_/ /_  /_/ /     __ |/ |/ / _  / __  /_
       yCtx.fillStyle = palette.axis;
       yCtx.textAlign = "right";
       yCtx.textBaseline = "middle";
-      yCtx.fillText("kWh", 56, 10);
+      yCtx.fillText("kWh", 70, 10);
       for (let hour = 0; hour < 24; hour += 1) {
         const y = margin.top + hour * cellHeight + cellHeight / 2;
-        yCtx.fillText(formatHour12(hour), 56, y);
+        yCtx.fillText(formatHour12(hour), 70, y);
       }
       xCtx.font = "13px 'Lucida Console', 'Courier New', Consolas, monospace";
       xCtx.fillStyle = palette.axis;
@@ -1460,8 +1460,8 @@ _  /___  _  / / /  __/  /   _  /_/ /_  /_/ /     __ |/ |/ / _  / __  /_
       ctx.strokeRect(margin.left, margin.top, plotWidth, plotHeight);
       yCtx.strokeStyle = palette.grid;
       yCtx.beginPath();
-      yCtx.moveTo(63.5, margin.top);
-      yCtx.lineTo(63.5, margin.top + plotHeight);
+      yCtx.moveTo(77.5, margin.top);
+      yCtx.lineTo(77.5, margin.top + plotHeight);
       yCtx.stroke();
       xCtx.strokeStyle = palette.grid;
       xCtx.beginPath();
