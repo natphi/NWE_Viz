@@ -390,10 +390,11 @@
     .chart-frame { width: 100%; position: relative; }
     .chart-frame svg, .chart-frame canvas { width: 100%; display: block; }
     .heatmap-wrap {
+      position: relative;
       border-radius: 14px;
       border: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
       background: var(--panel-bg-soft);
-      padding: 12px 12px 8px;
+      padding: 12px 12px 8px 36px;
     }
     .heatmap-shell {
       display: grid;
@@ -401,6 +402,7 @@
       grid-template-rows: 1fr auto;
       gap: 0 8px;
       align-items: stretch;
+      margin-left: 22px;
     }
     .heatmap-y-axis {
       grid-column: 1;
@@ -437,14 +439,13 @@
       text-transform: uppercase;
     }
     .heatmap-axis-label.y {
-      grid-column: 1;
-      grid-row: 2;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: absolute;
+      left: 8px;
+      top: 50%;
       writing-mode: vertical-rl;
-      transform: rotate(180deg);
-      padding: 8px 0 0;
+      transform: translateY(-50%) rotate(180deg);
+      display: block;
+      padding: 0;
     }
     .heatmap-axis-label.x {
       grid-column: 2;
@@ -1434,7 +1435,6 @@ _  /___  _  / / /  __/  /   _  /_/ /_  /_/ /     __ |/ |/ / _  / __  /_
       yCtx.fillStyle = palette.axis;
       yCtx.textAlign = "right";
       yCtx.textBaseline = "middle";
-      yCtx.fillText("kWh", 70, 10);
       for (let hour = 0; hour < 24; hour += 1) {
         const y = margin.top + hour * cellHeight + cellHeight / 2;
         yCtx.fillText(formatHour12(hour), 70, y);
