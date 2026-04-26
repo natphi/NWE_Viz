@@ -661,6 +661,7 @@ _  /___  _  / / /  __/  /   _  /_/ /_  /_/ /     __ |/ |/ / _  / __  /_
             <p>Direct NorthWestern Energy exports work without modification when they include hourly `DATE`, `START TIME`, and `USAGE` columns.</p>
             <div class="button-row">
               <label class="file-button" for="fileInput">Choose CSV</label>
+              <button id="loadExample" class="button-secondary" type="button">See Example</button>
             </div>
           </div>
         </div>
@@ -1739,6 +1740,20 @@ _  /___  _  / / /  __/  /   _  /_/ /_  /_/ /     __ |/ |/ / _  / __  /_
 
     ui.fileInput.addEventListener("change", (event) => {
       handleFile(event.target.files[0]);
+    });
+
+    document.getElementById("loadExample").addEventListener("click", () => {
+      clearError();
+      fetch("NWE_UsageReport_0000000_electric_2000446621_2025-04-01_2026-03-31.csv")
+        .then((res) => {
+          if (!res.ok) throw new Error("Could not fetch example file (HTTP " + res.status + ").");
+          return res.text();
+        })
+        .then((text) => {
+          const data = parseUsageFile(text, "example.csv");
+          drawAll(data);
+        })
+        .catch((err) => showError(err.message || "Failed to load example file."));
     });
 
     ui.dropZone.addEventListener("click", () => ui.fileInput.click());
