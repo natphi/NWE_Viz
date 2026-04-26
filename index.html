@@ -1742,7 +1742,8 @@ _  /___  _  / / /  __/  /   _  /_/ /_  /_/ /     __ |/ |/ / _  / __  /_
       handleFile(event.target.files[0]);
     });
 
-    document.getElementById("loadExample").addEventListener("click", () => {
+    document.getElementById("loadExample").addEventListener("click", (e) => {
+      e.stopPropagation();
       clearError();
       fetch("NWE_UsageReport_0000000_electric_2000446621_2025-04-01_2026-03-31.csv")
         .then((res) => {
